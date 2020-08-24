@@ -139,7 +139,7 @@ def process_feature_file_v1(feature_f, protocol, gps_points_list, feature_name, 
     feature_field_names, feature_field_types = extract_feature_attributes_from_protocol(protocol, feature_name)
     feature_fields_count = len(feature_field_names)
 
-    feature_table_name = feature_name
+    feature_table_name = arcpy.ValidateTableName(feature_name, database_path)
     feature_table = os.path.join(database_path, feature_table_name)
     feature_columns = ["SHAPE@XY"] + feature_field_names + protocol['csv']['features']['feature_field_names'] + \
                       ["GpsPoint_ID", "Observation_ID"]
@@ -178,13 +178,17 @@ def process_feature_file_v1(feature_f, protocol, gps_points_list, feature_name, 
                 observation_gps_oid = gps_points_list[observation_timestamp]
             except KeyError:
                 observation_gps_oid = None
-            feature = [feature_shape] + \
-                      [cast(protocol_items[i], feature_field_types[i]) for i in range(feature_fields_count)] + \
-                      [cast(feature_items[i], feature_types[i]) for i in range(len(feature_items))] + \
-                      [feature_gps_oid]
-            observation = [observation_shape] + \
-                          [cast(observe_items[i], observation_types[i]) for i in range(len(observe_items))] + \
-                          [observation_gps_oid]
+            try:
+                feature = [feature_shape] + \
+                        [cast(protocol_items[i], feature_field_types[i]) for i in range(feature_fields_count)] + \
+                        [cast(feature_items[i], feature_types[i]) for i in range(len(feature_items))] + \
+                        [feature_gps_oid]
+                observation = [observation_shape] + \
+                            [cast(observe_items[i], observation_types[i]) for i in range(len(observe_items))] + \
+                            [observation_gps_oid]
+            except:
+                arcpy.AddWarning("Skipping Bad Record.  Table: {0}; Record: {1}".format(feature_table,line))
+                continue
             observation_oid = observation_cursor.insertRow(observation)
             feature.append(observation_oid)
             feature_cursor.insertRow(feature)

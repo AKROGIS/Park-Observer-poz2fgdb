@@ -203,7 +203,7 @@ def build_relationships(fgdb, protocol):
                                              "NONE", "ONE_TO_ONE", "NONE", "OBJECTID", "GpsPoint_ID")
 
     for feature_obj in protocol['features']:
-        feature = feature_obj["name"]
+        feature = arcpy.ValidateTableName(feature_obj["name"], fgdb) 
         feature_table = os.path.join(fgdb, feature)
         arcpy.CreateRelationshipClass_management(gps_points_table, feature_table,
                                                  os.path.join(fgdb, "{0}_to_GpsPoint".format(feature)),
