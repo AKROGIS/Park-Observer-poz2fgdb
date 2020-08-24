@@ -11,6 +11,7 @@ import arcpy
 
 # Version: 2020-08-24
 #   Fix name of the toolbox
+#   Embed the CSV.json file so it does not need to be distributed with toolbox.
 # Version: 2019-07-22
 #   Catch parsing errors on feature tables and issue a warning
 #   Ensure that table name that I use match table names created by ArcGIS (i.e. space to '_')
