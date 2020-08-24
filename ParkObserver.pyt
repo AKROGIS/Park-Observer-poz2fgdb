@@ -9,6 +9,8 @@ import csv
 
 import arcpy
 
+# Version: 2020-08-24
+#   Fix name of the toolbox
 # Version: 2019-07-22
 #   Catch parsing errors on feature tables and issue a warning
 #   Ensure that table name that I use match table names created by ArcGIS (i.e. space to '_')
@@ -17,11 +19,9 @@ class Toolbox(object):
     """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
     def __init__(self):
-        self.label = "Places Toolbox"
-        self.alias = "Places"
-        self.description = ("A collection of GIS tools for populating and "
-                            "syncing Places with ArcGIS data (primarily data"
-                            "in an EGIS data schema).")
+        self.label = "Park Observer Toolbox"
+        self.alias = "Park Observer "
+        self.description = ("An ArcGIS tool box for working with data from the Park Observer iOS app.")
         self.tools = [PozToFgdb]
 
 
