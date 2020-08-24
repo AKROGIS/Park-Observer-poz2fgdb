@@ -366,6 +366,42 @@ def maybe_int(string):
 
 
 #####################
+# CSV.json
+#####################
+
+def csv_json:
+    """
+    {
+        "gps_points":{
+            "name":"GpsPoints",
+            "field_names":["Timestamp", "Latitude", "Longitude", "Datum", "Error_radius_m", "Course", "Speed_mps", "Altitude_m", "Vert_error_m"],
+            "field_types":["TEXT", "DOUBLE", "DOUBLE", "TEXT", "DOUBLE", "DOUBLE", "DOUBLE", "DOUBLE", "DOUBLE"],
+            "key_indexes":[0,2,1]
+        },
+        "track_logs":{
+            "name":"TrackLogs",
+            "field_names":["Observing", "Start_UTC", "Start_Local", "Year", "Day_of_Year", "End_UTC", "End_Local", "Duration_sec", "Start_Latitude", "Start_Longitude", "End_Latitude", "End_Longitude", "Datum", "Length_m"],
+            "field_types":["TEXT", "TEXT", "TEXT", "SHORT", "SHORT", "TEXT", "TEXT", "DOUBLE", "DOUBLE", "DOUBLE", "DOUBLE", "DOUBLE", "TEXT", "DOUBLE"],
+            "start_key_indexes":[1,9,8],
+            "end_key_indexes":[5,11,10]
+        },
+        "features":{
+            "header": "Timestamp_UTC,Timestamp_Local,Year,Day_of_Year,Feature_Latitude,Feature_Longitude,Observer_Latitude,Observer_Longitude,Datum,Map_Name,Map_Author,Map_Date,Angle,Distance,Perp_Meters",
+            "feature_field_names":["Timestamp_UTC", "Timestamp_Local", "Year", "Day_of_Year", "Latitude", "Longitude", "Datum"],
+            "feature_field_types":["DATE", "DATE", "SHORT", "SHORT", "DOUBLE", "DOUBLE", "TEXT"],
+            "feature_field_map":[0,1,2,3,4,5,8],
+            "feature_key_indexes":[0,5,4],
+            "obs_name":"Observations",
+            "obs_field_names":["Timestamp_UTC", "Timestamp_Local", "Year", "Day_of_Year", "Map_Name", "Map_Author", "Map_Date", "Angle", "Distance", "Perp_meters", "Latitude", "Longitude", "Datum"],
+            "obs_field_types":["TEXT", "TEXT", "SHORT", "SHORT", "TEXT", "TEXT", "TEXT", "DOUBLE", "DOUBLE", "DOUBLE", "DOUBLE", "DOUBLE", "TEXT"],
+            "obs_field_map":[0,1,2,3,9,10,11,12,13,14,6,7,8],
+            "obs_key_indexes":[0,11,10]
+        }
+    }
+    """
+
+
+#####################
 # DatabaseCreator.py
 #####################
 
@@ -390,11 +426,8 @@ def database_for_protocol_file(protocol_path, fgdb_folder):
 
 
 def add_missing_csv_section(protocol):
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-    csv_path = os.path.join(script_dir, 'csv.json')
-    with open(csv_path, 'r') as f:
-        csv = json.load(f)
-        protocol['csv'] = csv
+    csv = json.loads(csv_json())
+    protocol['csv'] = csv
     return protocol
 
 
