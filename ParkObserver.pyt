@@ -370,8 +370,7 @@ def maybe_int(string):
 # CSV.json
 #####################
 
-def csv_json:
-    """
+csv_json = """
     {
         "gps_points":{
             "name":"GpsPoints",
@@ -427,7 +426,7 @@ def database_for_protocol_file(protocol_path, fgdb_folder):
 
 
 def add_missing_csv_section(protocol):
-    csv = json.loads(csv_json())
+    csv = json.loads(csv_json)
     protocol['csv'] = csv
     return protocol
 
