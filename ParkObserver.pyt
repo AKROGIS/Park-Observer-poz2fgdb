@@ -11,6 +11,7 @@ import arcpy
 
 # Version: 2020-08-2409-01
 #   Fix for optional elments in protocol files
+#   Fix for empty lines in observations
 # Version: 2020-08-24
 #   Fix name of the toolbox
 #   Embed the CSV.json file so it does not need to be distributed with toolbox.
@@ -244,6 +245,9 @@ def process_feature_file_v1(feature_f, protocol, gps_points_list, feature_name, 
             arcpy.da.InsertCursor(observation_table, observation_columns) as observation_cursor:
         for line in csv.reader(feature_f):
             items = line  # line is a list of utf8 enocde strings (bytes)
+            # Skip empty lines (happens in some buggy versions)
+            if not items:
+                break
             protocol_items, other_items = items[:feature_fields_count], items[feature_fields_count:]
             feature_items = filter_items_by_index(other_items, feature_field_map)
             observe_items = filter_items_by_index(other_items, observation_field_map)
