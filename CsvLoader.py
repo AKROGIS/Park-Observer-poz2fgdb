@@ -239,10 +239,12 @@ def build_track_geometry(point_file, prior_last_point, start_time, end_time, key
 def extract_mission_attributes_from_protocol(protocol):
     field_names = []
     field_types = []
-    attributes = DatabaseCreator.get_attributes(protocol['mission'])
-    for attribute in attributes:
-        field_names.append(attribute['name'])
-        field_types.append(attribute['type'])
+    # mission is optional in Park Observer 2.0
+    if 'mission' in protocol:
+        attributes = DatabaseCreator.get_attributes(protocol['mission'])
+        for attribute in attributes:
+            field_names.append(attribute['name'])
+            field_types.append(attribute['type'])
     return field_names, field_types
 
 

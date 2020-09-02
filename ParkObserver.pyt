@@ -9,6 +9,8 @@ import csv
 
 import arcpy
 
+# Version: 2020-08-2409-01
+#   Fix for optional elments in protocol files
 # Version: 2020-08-24
 #   Fix name of the toolbox
 #   Embed the CSV.json file so it does not need to be distributed with toolbox.
@@ -319,10 +321,12 @@ def build_track_geometry(point_file, prior_last_point, start_time, end_time, key
 def extract_mission_attributes_from_protocol(protocol):
     field_names = []
     field_types = []
-    attributes = get_attributes(protocol['mission'])
-    for attribute in attributes:
-        field_names.append(attribute['name'])
-        field_types.append(attribute['type'])
+    # mission is optional in Park Observer 2.0
+    if 'mission' in protocol:
+        attributes = get_attributes(protocol['mission'])
+        for attribute in attributes:
+            field_names.append(attribute['name'])
+            field_types.append(attribute['type'])
     return field_names, field_types
 
 
@@ -450,7 +454,12 @@ def build_database_version1(protocol, folder, database):
     aliases = get_aliases_from_protocol_v1(protocol)
     build_domains(fgdb, domains)
     build_gpspoints_table_version1(fgdb, sr, protocol)
-    build_tracklog_table_version1(fgdb, sr, get_attributes(protocol['mission'], domains, aliases), protocol)
+    # mission is optional in Park Observer 2.0
+    try:
+        attribute_list = get_attributes(protocol['mission'], domains, aliases)
+    except KeyError:
+        attribute_list = []
+    build_tracklog_table_version1(fgdb, sr, attribute_list, protocol)
     build_observations_table_version1(fgdb, sr, protocol)
     for feature in protocol['features']:
         build_feature_table_version1(fgdb, sr, feature['name'], get_attributes(feature, domains, aliases), protocol)
@@ -473,11 +482,16 @@ def get_attributes(feature, domains=None, aliases=None):
         900: "DATE",
         1000: "BLOB",
     }
-    for attribute in feature['attributes']:
+    # attributes are optional in Park Observer 2.0
+    try:
+        attributes = feature['attributes']
+    except KeyError:
+        attributes =  []
+    for attribute in attributes:
         name = attribute['name']
         datatype = type_table[attribute['type']]
         try:
-            nullable = attribute['optional']
+            nullable = not attribute['required']
         except KeyError:
             nullable = True
 
@@ -630,52 +644,68 @@ def build_domains(fgdb, domains):
 
 def get_aliases_from_protocol_v1(protocol):
     results = {}
-    for feature in [protocol['mission']] + protocol['features']:
+    # mission is optional in Park Observer 2.0
+    try:
+        mission_list = [protocol['mission']]
+    except KeyError:
+        mission_list =  []
+    for feature in mission_list + protocol['features']:
         try:
             feature_name = feature['name']
         except KeyError:
             feature_name = 'mission'
         feature_results = {}
-        for section in feature['dialog']['sections']:
-            try:
-                section_title = section['title']
-            except KeyError:
-                section_title = None
-            field_title = None
-            for field in section['elements']:
+        # dialog is optional in Park Observer 2.0
+        if 'dialog' in feature: 
+            for section in feature['dialog']['sections']:
                 try:
-                    field_title = field['title']
+                    section_title = section['title']
                 except KeyError:
-                    pass
-                try:
-                    field_name = field['bind'].split(':')[1]
-                except (KeyError, IndexError, AttributeError) as e:
-                    field_name = None
-                if field_name and field_title:
-                    if section_title:
-                        field_alias = '{0} {1}'.format(section_title, field_title)
-                    else:
-                        field_alias = field_title
-                    feature_results[field_name] = field_alias
+                    section_title = None
+                field_title = None
+                for field in section['elements']:
+                    try:
+                        field_title = field['title']
+                    except KeyError:
+                        pass
+                    try:
+                        field_name = field['bind'].split(':')[1]
+                    except (KeyError, IndexError, AttributeError) as e:
+                        field_name = None
+                    if field_name and field_title:
+                        if section_title:
+                            field_alias = '{0} {1}'.format(section_title, field_title)
+                        else:
+                            field_alias = field_title
+                        feature_results[field_name] = field_alias
         results[feature_name] = feature_results
     return results
 
 
 def get_domains_from_protocol_v1(protocol):
     results = {}
-    mission_attribute_names = [attrib['name'] for attrib in protocol['mission']['attributes'] if attrib['type'] == 100]
-    for section in protocol['mission']['dialog']['sections']:
-        for field in section['elements']:
-            if field['type'] == 'QRadioElement' and field['bind'].startswith('selected:'):
-                name = field['bind'].replace('selected:', '').strip()
-                if name in mission_attribute_names:
-                    results[name] = field['items']
+    # mission, attributes, dialog and bind are optional properties in Park Observer 2.0
+    if 'mission' in protocol:
+        if 'attributes' in protocol['mission']:
+            mission_attribute_names = [attrib['name'] for attrib in protocol['mission']['attributes'] if attrib['type'] == 100]
+            if 'dialog' in protocol['mission']:
+                for section in protocol['mission']['dialog']['sections']:
+                    for field in section['elements']:
+                        if 'bind' in field:
+                            if field['type'] == 'QRadioElement' and field['bind'].startswith('selected:'):
+                                name = field['bind'].replace('selected:', '').strip()
+                                if name in mission_attribute_names:
+                                    results[name] = field['items']
     for feature in protocol['features']:
-        attribute_names = [attrib['name'] for attrib in feature['attributes'] if attrib['type'] == 100]
-        for section in feature['dialog']['sections']:
-            for field in section['elements']:
-                if field['type'] == 'QRadioElement' and field['bind'].startswith('selected:'):
-                    name = field['bind'].replace('selected:', '').strip()
-                    if name in attribute_names:
-                        results[name] = field['items']
+        # attributes, dialog and bind are optional properties in Park Observer 2.0
+        if 'attributes' in feature:
+            attribute_names = [attrib['name'] for attrib in feature['attributes'] if attrib['type'] == 100]
+            if 'dialog' in feature:
+                for section in feature['dialog']['sections']:
+                    for field in section['elements']:
+                        if 'bind' in field:
+                            if field['type'] == 'QRadioElement' and field['bind'].startswith('selected:'):
+                                name = field['bind'].replace('selected:', '').strip()
+                                if name in attribute_names:
+                                    results[name] = field['items']
     return results
