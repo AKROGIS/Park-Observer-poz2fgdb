@@ -23,7 +23,8 @@ service and as a secure (HTTPS) service.  It loads the modules
 the file `CSV.json` which describes the default mapping from the Park
 Observer database schema to a set of related feature classes in a FGDB.
 
-See Server.md for additional details on setting up `Server.py` as
+See [Server.md](https://github.com/AKROGIS/poz2fgdb/blob/master/Server.md)
+for additional details on setting up `Server.py` as
 a service.
 
 ## 2) Command Line Script: `MakeService.py`
