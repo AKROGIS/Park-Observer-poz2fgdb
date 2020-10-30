@@ -54,7 +54,4 @@ database schema to a set of related feature classes in a FGDB.
 This is an ArcGIS python toolbox than can be run from ArcCatalog,
 or ArcMap. It provides the same functionality as `poz2fgdb.py`.
 For convenience of distribution/installation the dependent modules
-are embedded.  See the source code for more details.  It does not
-include `CSV.json`, so that must be installed in the same folder
-if you need to process surveys that did not include the CSV definition
-in the protocol file. 
+and `csv.json` are embedded.  See the source code for more details. 
