@@ -1,5 +1,6 @@
 # poz2fgdb
- A tool kit for creating an esri file geodatabase from a Park Observer survey archive.
+ A tool kit for creating an esri file geodatabase from a
+ [Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive.
 
 The tool kit has 4 tools built off a common library.
 
