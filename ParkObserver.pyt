@@ -450,7 +450,7 @@ def database_for_version1(protocol, workspace):
 
 
 def build_database_version1(protocol, folder, database):
-    print "Building {0} in {1}".format(database, folder)
+    print("Building {0} in {1}".format(database, folder))
     arcpy.CreateFileGDB_management(folder, database)
     fgdb = os.path.join(folder, database)
     sr = arcpy.SpatialReference(4326)
@@ -621,7 +621,7 @@ def build_relationships(fgdb, protocol):
                                              "NONE", "ONE_TO_ONE", "NONE", "OBJECTID", "GpsPoint_ID")
 
     for feature_obj in protocol['features']:
-        feature = arcpy.ValidateTableName(feature_obj["name"], fgdb) 
+        feature = arcpy.ValidateTableName(feature_obj["name"], fgdb)
         feature_table = os.path.join(fgdb, feature)
         arcpy.CreateRelationshipClass_management(gps_points_table, feature_table,
                                                  os.path.join(fgdb, "{0}_to_GpsPoint".format(feature)),
@@ -660,7 +660,7 @@ def get_aliases_from_protocol_v1(protocol):
             feature_name = 'mission'
         feature_results = {}
         # dialog is optional in Park Observer 2.0
-        if 'dialog' in feature: 
+        if 'dialog' in feature:
             for section in feature['dialog']['sections']:
                 try:
                     section_title = section['title']
