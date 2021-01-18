@@ -6,6 +6,9 @@ A ReST service to support uploading of
 to fie geodatabases on a server.
 
 Written for Python 2.7; does not work with Python 3.x (import HTTPServer).
+To convert to Python 3.x see 
+https://stackoverflow.com/questions/23264569/python-3-x-basehttpserver-or-http-server
+
 Requires the Esri ArcGIS arcpy module (via CsvLoader).
 """
 
