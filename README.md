@@ -29,7 +29,7 @@ See [Server.md](https://github.com/AKROGIS/poz2fgdb/blob/master/Server.md)
 for additional details on setting up `Server.py` as
 a service.
 
-## 2) Command Line Script: `MakeService.py`
+## 2) Command Line Script: `make_service.py`
 
 A simple python script which creates a map service
 from a map file (MXD).  This requires the creation of a MXD
