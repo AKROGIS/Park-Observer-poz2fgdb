@@ -10,12 +10,14 @@ Requires dateutil module (pip install python-dateutil).
 
 from __future__ import print_function
 
-import arcpy
-import os
-import glob
-import DatabaseCreator
-import dateutil.parser
 import csv
+import glob
+import os
+
+import arcpy
+import dateutil.parser
+
+import DatabaseCreator
 
 # MACROS: Key indexes for GPS data in CSV data (T=Timestamp, X=Longitude, Y=Latitude)
 T, X, Y = 0, 1, 2
@@ -38,10 +40,10 @@ def process_csv_folder_v1(csv_path, protocol, database_path):
     track_logs_csv_name = protocol["csv"]["track_logs"]["name"]
     gps_points_list = None
     track_log_oids = None
-    # An edit session is needed to add items in a relationship, and to have multiple open insert cursors
-    # the edit variable is not used because the with statement handles saving and aborting the edit session
-    # noinspection PyUnusedLocal
-    with arcpy.da.Editor(database_path) as edit:
+    # An edit session is needed to add items in a relationship,
+    # and to have multiple open insert cursors
+    # The with statement handles saving and aborting the edit session
+    with arcpy.da.Editor(database_path):
         if (
             track_logs_csv_name in csv_filenames
             and gps_points_csv_name in csv_filenames
@@ -79,8 +81,7 @@ def process_tracklog_path_v1(
             track_log_header
         ):
             return process_tracklog_file_v1(point_f, track_f, protocol, database_path)
-        else:
-            return {}
+        return {}
 
 
 def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
@@ -131,12 +132,13 @@ def process_gpspoints_path_v1(
 ):
     path = os.path.join(csv_path, gps_point_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
-    with open(path) as f:
-        header = f.readline().rstrip()
+    with open(path) as handle:
+        header = handle.readline().rstrip()
         if header == gps_points_header:
-            return process_gpspoints_file_v1(f, track_log_oids, protocol, database_path)
-        else:
-            return {}
+            return process_gpspoints_file_v1(
+                handle, track_log_oids, protocol, database_path
+            )
+        return {}
 
 
 def process_gpspoints_file_v1(
@@ -181,8 +183,7 @@ def process_feature_path_v1(
             return process_feature_file_v1(
                 feature_f, protocol, gps_points_list, feature_name, database_path
             )
-        else:
-            return {}
+        return {}
 
 
 def process_feature_file_v1(
@@ -225,7 +226,7 @@ def process_feature_file_v1(
         observation_table, observation_columns
     ) as observation_cursor:
         for line in csv.reader(feature_f):
-            items = line  # line is a list of utf8 enocde strings (bytes)
+            items = line  # line is a list of utf8 encode strings (bytes)
             # Skip empty lines (happens in some buggy versions)
             if not items:
                 break
@@ -275,7 +276,7 @@ def process_feature_file_v1(
                     ]
                     + [observation_gps_oid]
                 )
-            except:
+            except Exception:
                 arcpy.AddWarning(
                     "Skipping Bad Record.  Table: {0}; Record: {1}".format(
                         feature_table, line
@@ -296,16 +297,15 @@ def process_feature_file_v1(
 
 def cast(string, esri_type):
     esri_type = esri_type.upper()
-    if esri_type == "DOUBLE" or esri_type == "FLOAT":
+    if esri_type in ("DOUBLE", "FLOAT"):
         return maybe_float(string)
-    elif esri_type == "SHORT" or esri_type == "LONG":
+    if esri_type in ("SHORT", "LONG"):
         return maybe_int(string)
-    elif esri_type == "DATE":
+    if esri_type == "DATE":
         return dateutil.parser.parse(string)
-    elif esri_type == "TEXT" or esri_type == "BLOB":
+    if esri_type in ("TEXT", "BLOB"):
         return string
-    else:
-        return None
+    return None
 
 
 def build_track_geometry(point_file, prior_last_point, start_time, end_time, keys):
@@ -382,7 +382,7 @@ def maybe_int(string):
         return None
 
 
-if __name__ == "__main__":
+def test():
     protocol_path = r"\\akrgis.nps.gov\inetApps\observer\protocols\sample.obsprot"
     fgdb_folder = r"C:\tmp\observer"
     csv_folder = r"C:\tmp\observer\test1"
@@ -390,3 +390,7 @@ if __name__ == "__main__":
         protocol_path, fgdb_folder
     )
     process_csv_folder(csv_folder, protocol_json, database)
+
+
+if __name__ == "__main__":
+    test()
