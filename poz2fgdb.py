@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+
+"""
+Command line tool for creating an esri file geodatabase from a
+[Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive.
+
+Written for Python 2.7; may work with Python 3.x.
+Requires the Esri ArcGIS arcpy module.
+"""
+
+from __future__ import print_function
+
 import sys
 import os
 import zipfile
@@ -28,12 +40,12 @@ def process(archive):
 
 def main():
     if len(sys.argv) != 2:
-        print usage.format(sys.argv[0])
+        print(usage.format(sys.argv[0]))
         sys.exit()
     archive_path = os.path.realpath(sys.argv[1])
     if not os.path.exists(archive_path):
-        print "Error: '{0}' does not exist".format(archive_path)
-        print usage.format(sys.argv[0])
+        print("Error: '{0}' does not exist".format(archive_path))
+        print(usage.format(sys.argv[0]))
         sys.exit()
     process(archive_path)
 

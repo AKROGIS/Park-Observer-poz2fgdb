@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+
+"""
+Module to load a Park Observer CSV file into a File Geodatabase.
+
+Written for Python 2.7; may work with Python 3.x.
+Requires the Esri ArcGIS arcpy module.
+"""
+
+from __future__ import print_function
+
 import arcpy
 import json
 import os
@@ -42,7 +53,7 @@ def database_for_version1(protocol, workspace):
 
 
 def build_database_version1(protocol, folder, database):
-    print "Building {0} in {1}".format(database, folder)
+    print("Building {0} in {1}".format(database, folder))
     arcpy.CreateFileGDB_management(folder, database)
     fgdb = os.path.join(folder, database)
     sr = arcpy.SpatialReference(4326)

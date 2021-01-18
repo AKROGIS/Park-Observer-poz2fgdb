@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+
+"""
+An ArcGIS Python toolbox for for creating an esri file geodatabase from a
+[Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive.
+
+Version: 2020-08-2409-01
+  Fix for optional elements in protocol files
+  Fix for empty lines in observations
+Version: 2020-08-24
+  Fix name of the toolbox
+  Embed the CSV.json file so it does not need to be distributed with toolbox.
+Version: 2019-07-22
+  Catch parsing errors on feature tables and issue a warning
+  Ensure that table name that I use match table names created by ArcGIS (i.e. space to '_')
+
+Written for Python 2.7; may work with Python 3.x.
+Requires the Esri ArcGIS arcpy module.
+"""
+
+from __future__ import print_function
+
 import os
 import zipfile
 import tempfile
@@ -9,15 +31,6 @@ import csv
 
 import arcpy
 
-# Version: 2020-08-2409-01
-#   Fix for optional elments in protocol files
-#   Fix for empty lines in observations
-# Version: 2020-08-24
-#   Fix name of the toolbox
-#   Embed the CSV.json file so it does not need to be distributed with toolbox.
-# Version: 2019-07-22
-#   Catch parsing errors on feature tables and issue a warning
-#   Ensure that table name that I use match table names created by ArcGIS (i.e. space to '_')
 
 class Toolbox(object):
     """Define the toolbox (the name of the toolbox is the name of the
@@ -62,6 +75,8 @@ class PozToFgdb(object):
 # The remainder of this file is stolen from poz2fgdb.py for process()
 # All function and "macro" definitions in CSVLoader.py
 # All function from DatabaseCreator.py
+# csv_json definition from CSV.json
+# This is done to allow the toolbox to be a self contained file.
 
 #####################
 # poz2fgdb.py
@@ -138,7 +153,7 @@ def process_tracklog_path_v1(csv_path, gps_point_filename, track_log_filename, p
 
 
 def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
-    print ("building track logs")
+    print("building track logs")
     track_log_oids = {}
     mission_field_names, mission_field_types = extract_mission_attributes_from_protocol(protocol)
     mission_fields_count = len(mission_field_names)
@@ -154,7 +169,7 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
 #    arcpy.RemoveSpatialIndex_management(table)
     with arcpy.da.InsertCursor(table, columns) as cursor:
         for line in csv.reader(track_file):
-            items = line  # line is a list of utf8 enocde strings (bytes)
+            items = line  # line is a list of utf8 encode strings (bytes)
             protocol_items, other_items = items[:mission_fields_count], items[mission_fields_count:]
             start_time, end_time = other_items[s_key[T]], other_items[e_key[T]]
             track, last_point = build_track_geometry(point_file, last_point, start_time, end_time, gps_keys)
@@ -177,7 +192,7 @@ def process_gpspoints_path_v1(csv_path, gps_point_filename, protocol, database_p
 
 
 def process_gpspoints_file_v1(file_without_header, tracklog_oids, protocol, database_path):
-    print ("building gps points")
+    print("building gps points")
     results = {}
     columns = ["SHAPE@XY"] + protocol['csv']['gps_points']['field_names']
     if tracklog_oids:
@@ -217,7 +232,7 @@ def process_feature_path_v1(csv_path, feature_name, gps_points_list, protocol, d
 
 
 def process_feature_file_v1(feature_f, protocol, gps_points_list, feature_name, database_path):
-    print ("building {0} features and observations".format(feature_name))
+    print("building {0} features and observations".format(feature_name))
 
     feature_field_names, feature_field_types = extract_feature_attributes_from_protocol(protocol, feature_name)
     feature_fields_count = len(feature_field_names)
@@ -244,7 +259,7 @@ def process_feature_file_v1(feature_f, protocol, gps_points_list, feature_name, 
     with arcpy.da.InsertCursor(feature_table, feature_columns) as feature_cursor, \
             arcpy.da.InsertCursor(observation_table, observation_columns) as observation_cursor:
         for line in csv.reader(feature_f):
-            items = line  # line is a list of utf8 enocde strings (bytes)
+            items = line  # line is a list of utf8 encode strings (bytes)
             # Skip empty lines (happens in some buggy versions)
             if not items:
                 break
@@ -674,7 +689,7 @@ def get_aliases_from_protocol_v1(protocol):
                         pass
                     try:
                         field_name = field['bind'].split(':')[1]
-                    except (KeyError, IndexError, AttributeError) as e:
+                    except (KeyError, IndexError, AttributeError):
                         field_name = None
                     if field_name and field_title:
                         if section_title:

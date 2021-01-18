@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+
+"""
+A simple python script which creates a map service from a map file (MXD).
+
+UNFINISHED
+
+Written for Python 2.7; may work with Python 3.x.
+Requires the Esri ArcGIS arcpy module.
+"""
+
+from __future__ import print_function
+
 import arcpy
 import os
 
@@ -6,7 +19,7 @@ workspace = r"D:\MapData\Observer"
 protocol = "Test_Protocol_v1"
 mxd = os.path.join(workspace, protocol + '.mxd')
 mapDoc = arcpy.mapping.MapDocument(mxd)
-#conectionfile = 'GIS Servers/arcgis on MyServer_6080 (publisher).ags' 
+#connectionfile = 'GIS Servers/arcgis on MyServer_6080 (publisher).ags' 
 
 sddraft = os.path.join(workspace, protocol + '.sddraft')
 sd = os.path.join(workspace, protocol + '.sd')
@@ -23,7 +36,7 @@ if analysis['errors'] == {}:
     # Execute StageService
     arcpy.StageService_server(sddraft, sd)
     # Execute UploadServiceDefinition
-    #arcpy.UploadServiceDefinition_server(sd, conectionfile)
+    #arcpy.UploadServiceDefinition_server(sd, connectionfile)
 else: 
     # if the sddraft analysis contained errors, display them
-    print analysis['errors']
+    print(analysis['errors'])

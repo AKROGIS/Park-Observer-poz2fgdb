@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+
+"""
+Module to load a Park Observer CSV file into a File Geodatabase.
+
+Written for Python 2.7; may work with Python 3.x.
+Requires the Esri ArcGIS arcpy module.
+"""
+
+from __future__ import print_function
+
 import arcpy
 import os
 import glob
@@ -55,7 +66,7 @@ def process_tracklog_path_v1(csv_path, gps_point_filename, track_log_filename, p
 
 
 def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
-    print ("building track logs")
+    print("building track logs")
     track_log_oids = {}
     mission_field_names, mission_field_types = extract_mission_attributes_from_protocol(protocol)
     mission_fields_count = len(mission_field_names)
@@ -94,7 +105,7 @@ def process_gpspoints_path_v1(csv_path, gps_point_filename, protocol, database_p
 
 
 def process_gpspoints_file_v1(file_without_header, tracklog_oids, protocol, database_path):
-    print ("building gps points")
+    print("building gps points")
     results = {}
     columns = ["SHAPE@XY"] + protocol['csv']['gps_points']['field_names']
     if tracklog_oids:
@@ -134,7 +145,7 @@ def process_feature_path_v1(csv_path, feature_name, gps_points_list, protocol, d
 
 
 def process_feature_file_v1(feature_f, protocol, gps_points_list, feature_name, database_path):
-    print ("building {0} features and observations".format(feature_name))
+    print("building {0} features and observations".format(feature_name))
 
     feature_field_names, feature_field_types = extract_feature_attributes_from_protocol(protocol, feature_name)
     feature_fields_count = len(feature_field_names)
