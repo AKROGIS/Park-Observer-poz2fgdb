@@ -1,4 +1,13 @@
-__author__ = "RESarwas"
+# -*- coding: utf-8 -*-
+
+"""
+A ReST service to support uploading of
+[Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive
+to fie geodatabases on a server.
+
+Written for Python 2.7; does not work with Python 3.x (import HTTPServer).
+Requires the Esri ArcGIS arcpy module (via CsvLoader).
+"""
 
 import os
 import zipfile
