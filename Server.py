@@ -10,13 +10,14 @@ Requires the Esri ArcGIS arcpy module (via CsvLoader).
 """
 
 import os
-import zipfile
-import tempfile
-import CsvLoader
-import shutil
+# import shutil
 import ssl
+import tempfile
+import zipfile
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+import CsvLoader
 
 
 class SyncHandler(BaseHTTPRequestHandler):
@@ -38,16 +39,16 @@ class SyncHandler(BaseHTTPRequestHandler):
             self.std_response()
             if os.path.exists(self.error_log):
                 self.wfile.write("Error Log contents:\n")
-                with open(self.error_log) as fh:
-                    self.wfile.write(fh.read())
+                with open(self.error_log) as handle:
+                    self.wfile.write(handle.read())
             else:
                 self.wfile.write("There are no errors to report.")
         elif self.path == "/dir":
             self.std_response()
             self.wfile.write("Databases:\n")
-            for f in os.listdir(self.root_folder):
-                if f != "upload" and f != "error.log":
-                    self.wfile.write("\t{0}\n".format(f))
+            for filename in os.listdir(self.root_folder):
+                if filename not in ("upload", "error.log"):
+                    self.wfile.write("\t{0}\n".format(filename))
         elif self.path == "/help":
             self.std_response()
             self.wfile.write(self.usage)
@@ -86,13 +87,13 @@ class SyncHandler(BaseHTTPRequestHandler):
             try:
                 length = self.headers.getheader("content-length")
                 data = self.rfile.read(int(length))
-                fd, fname = tempfile.mkstemp(dir=self.upload_folder)
+                file_desc, file_name = tempfile.mkstemp(dir=self.upload_folder)
                 try:
-                    with open(fname, "wb") as fh:
-                        fh.write(data)
+                    with open(file_name, "wb") as handle:
+                        handle.write(data)
                     csv_folder = tempfile.mkdtemp(dir=self.upload_folder)
                     try:
-                        self.process(fname, csv_folder)
+                        self.process(file_name, csv_folder)
                     finally:
                         pass  # shutil.rmtree(csv_folder)
                     self.std_response()
@@ -103,11 +104,11 @@ class SyncHandler(BaseHTTPRequestHandler):
                         self.log_date_time_string(), type(ex).__name__, ex
                     )
                     self.wfile.write(msg)
-                    with open(self.error_log, "a") as eh:
-                        eh.write(msg)
+                    with open(self.error_log, "a") as handle:
+                        handle.write(msg)
                 finally:
-                    os.close(fd)
-                    # os.remove(fname)
+                    os.close(file_desc)
+                    # os.remove(file_name)
             except Exception as ex:
                 self.err_response()
                 self.wfile.write(
@@ -118,9 +119,9 @@ class SyncHandler(BaseHTTPRequestHandler):
 
     def process(self, filename, csv_folder):
         # unzip file
-        with zipfile.ZipFile(filename) as myzip:
-            for name in myzip.namelist():
-                myzip.extract(name, csv_folder)
+        with zipfile.ZipFile(filename) as my_zip:
+            for name in my_zip.namelist():
+                my_zip.extract(name, csv_folder)
         # get the protocol file
         protocol_path = os.path.join(csv_folder, "protocol.obsprot")
         fgdb_folder = self.root_folder
