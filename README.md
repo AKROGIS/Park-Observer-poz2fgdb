@@ -1,4 +1,5 @@
-# poz2fgdb
+# Park Observer Survey to Esri File Geodatabase
+
  A tool kit for creating an esri file geodatabase from a
  [Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive.
 
@@ -42,7 +43,7 @@ must be set in the script before it is run.
 This script takes as input a Park Observer survey archive (*.poz),
 and builds an appropriate file geodatabase (if one does not exist),
 and creates or appends to the appropriate feature classes. The
-script takes only one required argument, the path of the *.poz file.
+script takes only one required argument, the path of the `*.poz` file.
 It creates the file geodatabase in the current directory unless one
 already exists there.
 
@@ -56,4 +57,4 @@ database schema to a set of related feature classes in a FGDB.
 This is an ArcGIS python toolbox than can be run from ArcCatalog,
 or ArcMap. It provides the same functionality as `poz2fgdb.py`.
 For convenience of distribution/installation the dependent modules
-and `csv.json` are embedded.  See the source code for more details. 
+and `csv.json` are embedded.  See the source code for more details.
