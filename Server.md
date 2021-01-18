@@ -1,17 +1,17 @@
 SyncServer
 ==========
 
-`Server.py` should run on a server accessible to the iPads running Park Observer
+`server.py` should run on a server accessible to the iPads running Park Observer
 The server should be behind the firewall, as it will expose raw Park Service data
 
-`Server.py` has a variable called root_foder which is where the data it manages resides
-the user that starts `Server.py` needs to have write permissions on this folder.  If it
-does not exist, the `Server.py` task will create it.  The user that runs `Server.py`
-also needs to have read/execute access to the python executable, and `Server.py`'s folder.
+`server.py` has a variable called root_folder which is where the data it manages resides
+the user that starts `server.py` needs to have write permissions on this folder.  If it
+does not exist, the `server.py` task will create it.  The user that runs `server.py`
+also needs to have read/execute access to the python executable, and `server.py`'s folder.
 
 Dependencies
 ------------
-`Server.py` was written for Python 2.7, and relies on the following modules
+`server.py` was written for Python 2.7, and relies on the following modules
 
   * `arcpy`  (ArcGIS version 10.1 or better)
   * `zipfile` - for decompressing the uploaded data
@@ -21,33 +21,33 @@ Dependencies
   * `glob` - for finding all files matching a pattern
   * `dateutil.parser` - for parsing ISO dates into python datetime (only needed for date fields)
   * `json` - for parsing the javascript object notation in the protocol files
-  * `DatabaseCreator.py` - builds a FGDB database per a protocol specification
-  * `CsvLoader.py` - reads CSV files built per the protocol, and loads them into a database,
-    it will call `DatabaseCreator.py` if necessary to build the database.
+  * `database_creator.py` - builds a FGDB database per a protocol specification
+  * `csv_loader.py` - reads CSV files built per the protocol, and loads them into a database,
+    it will call `database_creator.py` if necessary to build the database.
 
-`Server.py` listens on port 8080 for an HTTP Post command to the URI `/sync`
+`server.py` listens on port 8080 for an HTTP Post command to the URI `/sync`
 The data must be a zip file with
   * a protocol file in JSON format complying with the Protocol Specification for Park Observer
   * 1 or more csv files as described in the protocol
   * all the files must be in the root level of the zip file (they cannot be in a folder)
 
-`Server.py` will read the protocol file in the zip and look for a file geodatabase with the
+`server.py` will read the protocol file in the zip and look for a file geodatabase with the
 name and version of the protocol.  If a FGDB with the correct name does not exist, it is
-created.  The CSV files that were included in the zip file are assumed to be formated per
+created.  The CSV files that were included in the zip file are assumed to be formatted per
 the provided protocol, and are loaded into the database per the protocol's CSV
 specifications.  If this is really old protocol file it might not have a CSV
 specification, in which case the sibling file `csv.json` is used
 
-When `Server.py` runs it will listen on port 8080 until it crashes, is killed, or the computer
-is restarted.  A scheduled task should be created to relaunch `Server.py` shold it be found
-to not be running.  `Server.py` will log any error it gets in an `error.log` file, the contents
+When `server.py` runs it will listen on port 8080 until it crashes, is killed, or the computer
+is restarted.  A scheduled task should be created to relaunch `server.py` should it be found
+to not be running.  `server.py` will log any error it gets in an `error.log` file, the contents
 can be retrieved by sending a GET comment to URI `/error` on port 8080 (i.e. http://akrgis.nps.gov:8080/error)
-`Server.py` also recognizes `/help`, `/dir`, and `/load` to get information on the server
+`server.py` also recognizes `/help`, `/dir`, and `/load` to get information on the server
 
 Installation
 ------------
-You will need to put `Server.py` in an appropriate location with (`CsvLoader.py`,
-`DatabaseCreator.py` and `csv.json`). You will also need to ensure that port 8080
+You will need to put `server.py` in an appropriate location with (`CsvLoader.py`,
+`database_creator.py` and `csv.json`). You will also need to ensure that port 8080
 is open for TCP from any computer on the domain (see the Firewall setting in the
   Administrative part of the Control Panel)
 
@@ -58,7 +58,7 @@ You will need to create a scheduled task.  I set it up to
  * Trigger: At system Startup
  * Trigger: When the task is created or modified
  * Action: command `C:\python27\ArcGISx6410.2\python.exe`
- * Action: arguments `E:\inetApps\observer\syncserver\Server.py`
+ * Action: arguments `E:\inetApps\observer\syncserver\server.py`
  * Action: Start in `E:\inetApps\observer\syncserver`
  * Conditions: If the task fails, restart every minute for 3 tries
  * Conditions: DO NOT stop the task if it has been running for a long time (this taks should run forever)
@@ -79,7 +79,7 @@ Secure service
 --------------
 The insecure service on port 8080 is deprecated for a secure service running on
 port 8443. This is required since iOS 10.0 defaults to only https
-connections.  Currently there are two sevices running.
+connections.  Currently there are two services running.
 
 The secure service is using a DOI certificate issued against the Fully Qualified
 Domain Name (FQDN) of the server (i.e. INPXXX.NPS.DOI.NET). The current certificate expires on 2019-06-29.
@@ -97,8 +97,8 @@ to see if there are any new errors, and http://servername:8080/dir to see if a n
 
 Data Access
 -----------
-You should share (as readonly) the `root_folder` in `Server.py` with all domain users, so they can either copy
+You should share (as readonly) the `root_folder` in `server.py` with all domain users, so they can either copy
 the FGDB, or access the data via a layer file.  I hope to automate the creation of a layer file
 and MXD, so that a service can automatically be created.  This could be done once when the database
 is created.  Links to the service and layer file could be provided on the Park Observer website
-so that users could easily check that their data is on the server and add it to thier maps.
+so that users could easily check that their data is on the server and add it to their maps.

@@ -9,7 +9,7 @@ Written for Python 2.7; does not work with Python 3.x (import HTTPServer).
 To convert to Python 3.x see 
 https://stackoverflow.com/questions/23264569/python-3-x-basehttpserver-or-http-server
 
-Requires the Esri ArcGIS arcpy module (via CsvLoader).
+Requires the Esri ArcGIS arcpy module (via csv_loader).
 """
 
 import os
@@ -20,7 +20,7 @@ import zipfile
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-import CsvLoader
+import csv_loader
 
 
 class SyncHandler(BaseHTTPRequestHandler):
@@ -128,11 +128,11 @@ class SyncHandler(BaseHTTPRequestHandler):
         # get the protocol file
         protocol_path = os.path.join(csv_folder, "protocol.obsprot")
         fgdb_folder = self.root_folder
-        database, protocol_json = CsvLoader.DatabaseCreator.database_for_protocol_file(
+        database, protocol_json = csv_loader.DatabaseCreator.database_for_protocol_file(
             protocol_path, fgdb_folder
         )
         # CSVLoad file
-        CsvLoader.process_csv_folder(csv_folder, protocol_json, database)
+        csv_loader.process_csv_folder(csv_folder, protocol_json, database)
 
 
 if not os.path.exists(SyncHandler.upload_folder):

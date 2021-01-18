@@ -80,8 +80,8 @@ class PozToFgdb(object):
 
 # The remainder of this file is stolen from poz2fgdb.py for process()
 # All function and "macro" definitions in CSVLoader.py
-# All function from DatabaseCreator.py
-# csv_json definition from CSV.json
+# All function from database_creator.py
+# csv_json definition from csv.json
 # This is done to allow the toolbox to be a self contained file.
 
 #####################
@@ -107,7 +107,7 @@ def process(archive):
 
 
 #####################
-# CsvLoader.py
+# csv_loader.py
 #####################
 
 # MACROS: Key indexes for GPS data in CSV data (T=Timestamp, X=Longitude, Y=Latitude)
@@ -476,7 +476,7 @@ def maybe_int(string):
 
 
 #####################
-# CSV.json
+# csv.json
 #####################
 
 csv_json = """
@@ -511,7 +511,7 @@ csv_json = """
 
 
 #####################
-# DatabaseCreator.py
+# database_creator.py
 #####################
 
 

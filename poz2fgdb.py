@@ -19,7 +19,7 @@ import tempfile
 import zipfile
 
 
-import CsvLoader
+import csv_loader
 
 USAGE = "Usage: {0} FILE.poz\n"
 
@@ -35,11 +35,11 @@ def process(archive):
         # get the protocol file
         protocol_path = os.path.join(extraction_folder, "protocol.obsprot")
         fgdb_folder = os.path.dirname(archive)
-        database, protocol_json = CsvLoader.DatabaseCreator.database_for_protocol_file(
+        database, protocol_json = csv_loader.DatabaseCreator.database_for_protocol_file(
             protocol_path, fgdb_folder
         )
         # CSVLoad file
-        CsvLoader.process_csv_folder(extraction_folder, protocol_json, database)
+        csv_loader.process_csv_folder(extraction_folder, protocol_json, database)
     finally:
         shutil.rmtree(extraction_folder)
 

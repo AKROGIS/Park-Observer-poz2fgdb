@@ -5,35 +5,35 @@
 
 The tool kit has 4 tools built off a common library.
 
-## 1) An HTTP service: `Server.py`
+## 1) An HTTP service: `server.py`
 
 A python script that runs a web service that listens for requests
 upload and process a survey archive (*.poz) from Park Observer.
 This service maintains an esri file geodatabase for each major
 version of a protocol file that it sees.  These file geodatabases
 are maintained on the server and can feed map services (created
-with `MakeService.py`).  They can also be downloaded by the users.
+with `make_service.py`).  They can also be downloaded by the users.
 
 This service supported the _sync to server_ option in Park Observer
 1.x.  However it was rarely used, since most users did not have
 access to the NPS wifi on their mobile devices.  This service is not
 used with Park Observer 2.0
 
-The `Server.py` script has options to be run as an un-secure (HTTP)
+The `server.py` script has options to be run as an un-secure (HTTP)
 service and as a secure (HTTPS) service.  It loads the modules
-`CsvLoader.py` and `DatabaseCreator.py`. `DatabaseCreator.py` relies on
-the file `CSV.json` which describes the default mapping from the Park
+`csv_loader.py` and `database_creator.py`. `database_creator.py` relies on
+the file `csv.json` which describes the default mapping from the Park
 Observer database schema to a set of related feature classes in a FGDB.
 
 See [Server.md](https://github.com/AKROGIS/poz2fgdb/blob/master/Server.md)
-for additional details on setting up `Server.py` as
+for additional details on setting up `server.py` as
 a service.
 
 ## 2) Command Line Script: `make_service.py`
 
 A simple python script which creates a map service
 from a map file (MXD).  This requires the creation of a MXD
-set up for each of the file geodatabases created by `Server.py`
+set up for each of the file geodatabases created by `server.py`
 It was hoped that this could be fully automated, but for
 now it is a one time manual process.  The name of the map file
 must be set in the script before it is run.
@@ -47,8 +47,8 @@ script takes only one required argument, the path of the `*.poz` file.
 It creates the file geodatabase in the current directory unless one
 already exists there.
 
-The script `poz2fgdb.py` loads the modules `CsvLoader.py` and 
-`DatabaseCreator.py`. `DatabaseCreator.py` relies on the file
+The script `poz2fgdb.py` loads the modules `csv_loader.py` and 
+`database_creator.py`. `database_creator.py` relies on the file
 `CSV.json` which describes the default mapping from the Park Observer
 database schema to a set of related feature classes in a FGDB.
 
