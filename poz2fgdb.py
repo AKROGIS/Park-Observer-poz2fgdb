@@ -31,7 +31,9 @@ def process(archive):
         # get the protocol file
         protocol_path = os.path.join(extraction_folder, "protocol.obsprot")
         fgdb_folder = os.path.dirname(archive)
-        database, protocol_json = CsvLoader.DatabaseCreator.database_for_protocol_file(protocol_path, fgdb_folder)
+        database, protocol_json = CsvLoader.DatabaseCreator.database_for_protocol_file(
+            protocol_path, fgdb_folder
+        )
         # CSVLoad file
         CsvLoader.process_csv_folder(extraction_folder, protocol_json, database)
     finally:
@@ -49,5 +51,6 @@ def main():
         sys.exit()
     process(archive_path)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
