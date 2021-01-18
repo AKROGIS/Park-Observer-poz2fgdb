@@ -17,7 +17,7 @@ import os
 import arcpy
 import dateutil.parser
 
-import DatabaseCreator
+import database_creator
 
 # MACROS: Key indexes for GPS data in CSV data (T=Timestamp, X=Longitude, Y=Latitude)
 T, X, Y = 0, 1, 2
@@ -335,7 +335,7 @@ def extract_mission_attributes_from_protocol(protocol):
     field_types = []
     # mission is optional in Park Observer 2.0
     if "mission" in protocol:
-        attributes = DatabaseCreator.get_attributes(protocol["mission"])
+        attributes = database_creator.get_attributes(protocol["mission"])
         for attribute in attributes:
             field_names.append(attribute["name"])
             field_types.append(attribute["type"])
@@ -348,7 +348,7 @@ def extract_feature_attributes_from_protocol(protocol, feature_name):
     attributes = None
     for feature in protocol["features"]:
         if feature["name"] == feature_name:
-            attributes = DatabaseCreator.get_attributes(feature)
+            attributes = database_creator.get_attributes(feature)
     for attribute in attributes:
         field_names.append(attribute["name"])
         field_types.append(attribute["type"])
@@ -386,7 +386,7 @@ def test():
     protocol_path = r"\\akrgis.nps.gov\inetApps\observer\protocols\sample.obsprot"
     fgdb_folder = r"C:\tmp\observer"
     csv_folder = r"C:\tmp\observer\test1"
-    database, protocol_json = DatabaseCreator.database_for_protocol_file(
+    database, protocol_json = database_creator.database_for_protocol_file(
         protocol_path, fgdb_folder
     )
     process_csv_folder(csv_folder, protocol_json, database)
