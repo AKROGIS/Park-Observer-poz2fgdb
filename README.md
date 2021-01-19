@@ -17,7 +17,7 @@ with `make_service.py`).  They can also be downloaded by the users.
 This service supported the _sync to server_ option in Park Observer
 1.x.  However it was rarely used, since most users did not have
 access to the NPS WiFi on their mobile devices.  This service is not
-used with Park Observer 2.0
+used with Park Observer 2.0, and is no longer deployed.
 
 The `server.py` script has options to be run as an un-secure (HTTP)
 service and as a secure (HTTPS) service.  It loads the modules
@@ -52,9 +52,37 @@ The script `poz2fgdb.py` loads the modules `csv_loader.py` and
 `csv.json` which describes the default mapping from the Park Observer
 database schema to a set of related feature classes in a FGDB.
 
+This tool is typically only used by the developer during testing.  It could be
+deployed to the users, but most will prefer the toolbox (below).
+
 ## 4) ArcGIS Toolbox: `ParkObserver.pyt`
 
 This is an ArcGIS python toolbox than can be run from ArcCatalog,
 or ArcMap. It provides the same functionality as `poz2fgdb.py`.
 For convenience of distribution/installation the dependent modules
 and `csv.json` are embedded.  See the source code for more details.
+
+### Build
+
+Do not edit `ParkObserver.pyt` directly.  Edit `csv_loader.py` and/or
+`database_creator.py`, and then test with `poz2fgdb.py`. Once changes have been
+verified, the changes can be copied to `ParkObserver.pyt`.
+
+### Deploy
+
+Copy the updated `ParkObserver.pyt` to the deployed location of the
+[Park Observer website](https://github.com/AKROGIS/Park-Observer-website).
+Update the website
+[download document](https://github.com/AKROGIS/Park-Observer-Website/blob/master/downloads2/index.html#L67-L70)
+with the new release date of the toolbox and any significant changes.
+
+### Use
+
+ArcGIS users can open the toolbox in ArcMap, ArcCatalog, or Pro.  The only input
+parameter is the file system path to the survey archive file (`*.poz`).  If a
+file geodatabase with the correct name exists in the same folder as the archive
+it will get new data appended to it, otherwise a new geodatabase will be created
+and the data added to it.
+
+More detailed usage instructions can be found on the
+[Park Observer website](https://github.com/AKROGIS/Park-Observer-website).
