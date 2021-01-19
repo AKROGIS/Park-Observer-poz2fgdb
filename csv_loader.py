@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module to load a Park Observer CSV file into a File Geodatabase.
+Module to load Park Observer CSV files into an esri file geodatabase.
 
 Written for Python 2.7; may work with Python 3.x.
 Requires the Esri ArcGIS arcpy module.
@@ -24,6 +24,13 @@ T, X, Y = 0, 1, 2
 
 
 def process_csv_folder(csv_path, protocol, database_path):
+    """Build a set of feature classes for a folder of CSV files.
+
+    Takes a file path to a folder of CSV files (string), a PO protocol object,
+    and a file path to an existing fgdb (string).
+
+    There is no return value.
+    """
     version = protocol["meta-version"]
     if version <= 2:
         process_csv_folder_v1(csv_path, protocol, database_path)
@@ -32,6 +39,7 @@ def process_csv_folder(csv_path, protocol, database_path):
 
 
 def process_csv_folder_v1(csv_path, protocol, database_path):
+    """Build a set of feature classes for a folder of CSV files (in version 1 format)."""
     csv_files = glob.glob(csv_path + r"\*.csv")
     csv_filenames = [
         os.path.splitext(os.path.basename(csv_file))[0] for csv_file in csv_files
@@ -70,6 +78,7 @@ def process_csv_folder_v1(csv_path, protocol, database_path):
 def process_tracklog_path_v1(
     csv_path, gps_point_filename, track_log_filename, protocol, database_path
 ):
+    """Process the CSV file of track log and return the object IDs of the new track logs."""
     point_path = os.path.join(csv_path, gps_point_filename + ".csv")
     track_path = os.path.join(csv_path, track_log_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
@@ -85,6 +94,7 @@ def process_tracklog_path_v1(
 
 
 def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
+    """Build a track log feature class and return the object IDs of the new track logs."""
     print("building track logs")
     track_log_oids = {}
     mission_field_names, mission_field_types = extract_mission_attributes_from_protocol(
@@ -130,6 +140,7 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
 def process_gpspoints_path_v1(
     csv_path, gps_point_filename, protocol, database_path, track_log_oids=None
 ):
+    """Add a CSV file of GPS points to the database."""
     path = os.path.join(csv_path, gps_point_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
     with open(path) as handle:
@@ -144,6 +155,7 @@ def process_gpspoints_path_v1(
 def process_gpspoints_file_v1(
     file_without_header, tracklog_oids, protocol, database_path
 ):
+    """Build a GPS points feature class and return the new features."""
     print("building gps points")
     results = {}
     columns = ["SHAPE@XY"] + protocol["csv"]["gps_points"]["field_names"]
@@ -175,6 +187,7 @@ def process_gpspoints_file_v1(
 def process_feature_path_v1(
     csv_path, feature_name, gps_points_list, protocol, database_path
 ):
+    """Add a feature's CSV file to the database."""
     feature_path = os.path.join(csv_path, feature_name + ".csv")
     feature_header = protocol["csv"]["features"]["header"]
     with open(feature_path) as feature_f:
@@ -189,6 +202,7 @@ def process_feature_path_v1(
 def process_feature_file_v1(
     feature_f, protocol, gps_points_list, feature_name, database_path
 ):
+    """Build a feature class in the database for a named feature."""
     print("building {0} features and observations".format(feature_name))
 
     feature_field_names, feature_field_types = extract_feature_attributes_from_protocol(
@@ -296,6 +310,7 @@ def process_feature_file_v1(
 
 
 def cast(string, esri_type):
+    """Convert a string to an esri data type and return it or None."""
     esri_type = esri_type.upper()
     if esri_type in ("DOUBLE", "FLOAT"):
         return maybe_float(string)
@@ -309,6 +324,7 @@ def cast(string, esri_type):
 
 
 def build_track_geometry(point_file, prior_last_point, start_time, end_time, keys):
+    """Build and return a polyline, and last point for a track log."""
     if prior_last_point:
         path = [prior_last_point]
     else:
@@ -331,6 +347,7 @@ def build_track_geometry(point_file, prior_last_point, start_time, end_time, key
 
 
 def extract_mission_attributes_from_protocol(protocol):
+    """Extract and return the field names/types from a protocol file mission."""
     field_names = []
     field_types = []
     # mission is optional in Park Observer 2.0
@@ -343,6 +360,7 @@ def extract_mission_attributes_from_protocol(protocol):
 
 
 def extract_feature_attributes_from_protocol(protocol, feature_name):
+    """Extract and return the field names/types from a protocol file feature."""
     field_names = []
     field_types = []
     attributes = None
@@ -369,6 +387,7 @@ def filter_items_by_index(items, indexes):
 
 
 def maybe_float(string):
+    """Convert string to a float and return the float or None."""
     try:
         return float(string)
     except ValueError:
@@ -376,6 +395,7 @@ def maybe_float(string):
 
 
 def maybe_int(string):
+    """Convert string to an integer and return the integer or None."""
     try:
         return int(string)
     except ValueError:
@@ -383,6 +403,7 @@ def maybe_int(string):
 
 
 def test():
+    """Create a database and load a folder of CSV data."""
     protocol_path = r"\\akrgis.nps.gov\inetApps\observer\protocols\sample.obsprot"
     fgdb_folder = r"C:\tmp\observer"
     csv_folder = r"C:\tmp\observer\test1"

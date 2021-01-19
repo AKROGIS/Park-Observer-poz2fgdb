@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module to load a Park Observer CSV file into a File Geodatabase.
+Module to create an esri file geodatabase for a Park Observer protocol file.
 
 Written for Python 2.7; may work with Python 3.x.
 Requires the Esri ArcGIS arcpy module.
@@ -16,6 +16,13 @@ import arcpy
 
 
 def database_for_protocol_file(protocol_path, fgdb_folder):
+    """Create an esri file geodatabase from a Park Observer protocol file.
+
+    Takes a file path to the protocol file (string) and a file path to the
+    folder where the geodatabase is to be created (string).
+
+    Returns the file path of the geodatabase (string) and the protocol (object).
+    """
     with open(protocol_path, "r") as handle:
         protocol = json.load(handle)
     # I either crashed or I have a good protocol
@@ -37,6 +44,7 @@ def database_for_protocol_file(protocol_path, fgdb_folder):
 
 
 def add_missing_csv_section(protocol):
+    """Add the default csv property to a protocol object and return the protocol."""
     script_dir = os.path.dirname(os.path.realpath(__file__))
     csv_path = os.path.join(script_dir, "csv.json")
     with open(csv_path, "r") as handle:
@@ -46,6 +54,7 @@ def add_missing_csv_section(protocol):
 
 
 def database_for_version1(protocol, workspace):
+    """Create a geodatabase from a PO protocol file and return the fgdb's path."""
     version = int(protocol["version"])  # get just the major number of the protocol
     raw_database_name = protocol["name"] + "_v" + str(version)
     valid_database_name = arcpy.ValidateTableName(raw_database_name, workspace) + ".gdb"
@@ -56,6 +65,7 @@ def database_for_version1(protocol, workspace):
 
 
 def build_database_version1(protocol, folder, database):
+    """Create a geodatabase from a PO version 1 protocol file and return the fgdb's path."""
     print("Building {0} in {1}".format(database, folder))
     arcpy.CreateFileGDB_management(folder, database)
     fgdb = os.path.join(folder, database)
@@ -84,6 +94,13 @@ def build_database_version1(protocol, folder, database):
 
 
 def get_attributes(feature, domains=None, aliases=None):
+    """Converts a protocol feature's attributes into esri attribute properties.
+
+    Takes a feature (object) from the protocol file, and dictionary of
+    domains (default None), and a dictionary of aliases (default None).
+
+    Return a list of esri attribute objects for each attribute in the feature.
+    """
     attribute_list = []
     type_table = {
         0: "LONG",
@@ -143,6 +160,7 @@ def get_attributes(feature, domains=None, aliases=None):
 
 
 def build_gpspoints_table_version1(fgdb, spatial_ref, protocol):
+    """Create a feature class of GPS points."""
     table_name = protocol["csv"]["gps_points"]["name"]
     field_names = protocol["csv"]["gps_points"]["field_names"]
     field_types = protocol["csv"]["gps_points"]["field_types"]
@@ -167,6 +185,7 @@ def build_gpspoints_table_version1(fgdb, spatial_ref, protocol):
 
 
 def build_tracklog_table_version1(fgdb, spatial_ref, attributes, protocol):
+    """Create a feature class of track logs."""
     table_name = protocol["csv"]["track_logs"]["name"]
     field_names = protocol["csv"]["track_logs"]["field_names"]
     field_types = protocol["csv"]["track_logs"]["field_types"]
@@ -202,6 +221,7 @@ def build_tracklog_table_version1(fgdb, spatial_ref, attributes, protocol):
 
 
 def build_observations_table_version1(fgdb, spatial_ref, protocol):
+    """Create a feature class of PO observation locations."""
     table_name = protocol["csv"]["features"]["obs_name"]
     field_names = protocol["csv"]["features"]["obs_field_names"]
     field_types = protocol["csv"]["features"]["obs_field_types"]
@@ -225,6 +245,7 @@ def build_observations_table_version1(fgdb, spatial_ref, protocol):
 
 
 def build_feature_table_version1(fgdb, spatial_ref, raw_name, attributes, protocol):
+    """Create a feature class of PO observation items (features)."""
     valid_feature_name = arcpy.ValidateTableName(raw_name, fgdb)
     field_names = protocol["csv"]["features"]["feature_field_names"]
     field_types = protocol["csv"]["features"]["feature_field_types"]
@@ -263,6 +284,7 @@ def build_feature_table_version1(fgdb, spatial_ref, raw_name, attributes, protoc
 
 
 def build_relationships(fgdb, protocol):
+    """Create the relationships between the various PO feature classes."""
     gps_points_table = os.path.join(fgdb, protocol["csv"]["gps_points"]["name"])
     track_logs_table = os.path.join(fgdb, protocol["csv"]["track_logs"]["name"])
     observations_table = os.path.join(fgdb, "Observations")
@@ -326,6 +348,7 @@ def build_relationships(fgdb, protocol):
 
 
 def build_domains(fgdb, domains):
+    """Create the esri domains (picklists) for track logs and features."""
     arcpy.CreateDomain_management(
         fgdb, "YesNoBoolean", "Yes/No values", "SHORT", "CODED"
     )
@@ -341,6 +364,7 @@ def build_domains(fgdb, domains):
 
 
 def get_aliases_from_protocol_v1(protocol):
+    """Create esri field name aliases using the attribute titles from the  input form."""
     results = {}
     # mission is optional in Park Observer 2.0
     try:
@@ -381,6 +405,7 @@ def get_aliases_from_protocol_v1(protocol):
 
 
 def get_domains_from_protocol_v1(protocol):
+    """Return a dictionary of valid values (list) for each attribute name (string)."""
     results = {}
     # mission, attributes, dialog and bind are optional properties in Park Observer 2.0
     if "mission" in protocol:
