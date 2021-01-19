@@ -115,11 +115,10 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
     #    arcpy.RemoveSpatialIndex_management(table)
     with arcpy.da.InsertCursor(table, columns) as cursor:
         for line in csv.reader(track_file):
-            items = line  # line is a list of utf8 enocde strings (bytes)
-            protocol_items, other_items = (
-                items[:mission_fields_count],
-                items[mission_fields_count:],
-            )
+            # each line in the CSV is a list of items - utf8 encode strings (bytes)
+            items = line
+            protocol_items = items[:mission_fields_count]
+            other_items = items[mission_fields_count:]
             start_time, end_time = other_items[s_key[T]], other_items[e_key[T]]
             track, last_point = build_track_geometry(
                 point_file, last_point, start_time, end_time, gps_keys
@@ -127,10 +126,10 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
             row = (
                 [track]
                 + [
-                    cast(protocol_items[i], mission_field_types[i])
-                    for i in range(len(protocol_items))
+                    cast(item, mission_field_types[i])
+                    for i, item in enumerate(protocol_items)
                 ]
-                + [cast(other_items[i], types[i]) for i in range(len(other_items))]
+                + [cast(item, types[i]) for i, item in enumerate(other_items)]
             )
             track_log_oids[start_time] = cursor.insertRow(row)
     #    arcpy.AddSpatialIndex_management(table)
@@ -172,7 +171,7 @@ def process_gpspoints_file_v1(
         for line in file_without_header:
             items = line.split(",")
             shape = (float(items[key[X]]), float(items[key[Y]]))
-            row = [shape] + [cast(items[i], types[i]) for i in range(len(items))]
+            row = [shape] + [cast(item, types[i]) for i, item in enumerate(items)]
             if tracklog_oids:
                 try:
                     current_track_oid = tracklog_oids[items[key[T]]]
@@ -243,10 +242,8 @@ def process_feature_file_v1(
             # Skip empty lines (happens in some buggy versions)
             if not items:
                 break
-            protocol_items, other_items = (
-                items[:feature_fields_count],
-                items[feature_fields_count:],
-            )
+            protocol_items = items[:feature_fields_count]
+            other_items = items[feature_fields_count:]
             feature_items = filter_items_by_index(other_items, feature_field_map)
             observe_items = filter_items_by_index(other_items, observation_field_map)
 
@@ -272,20 +269,20 @@ def process_feature_file_v1(
                 feature = (
                     [feature_shape]
                     + [
-                        cast(protocol_items[i], feature_field_types[i])
-                        for i in range(feature_fields_count)
+                        cast(item, feature_field_types[i])
+                        for i, item in enumerate(protocol_items)
                     ]
                     + [
-                        cast(feature_items[i], feature_types[i])
-                        for i in range(len(feature_items))
+                        cast(item, feature_types[i])
+                        for i, item in enumerate(feature_items)
                     ]
                     + [feature_gps_oid]
                 )
                 observation = (
                     [observation_shape]
                     + [
-                        cast(observe_items[i], observation_types[i])
-                        for i in range(len(observe_items))
+                        cast(item, observation_types[i])
+                        for i, item in enumerate(observe_items)
                     ]
                     + [observation_gps_oid]
                 )
