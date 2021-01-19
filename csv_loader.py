@@ -193,10 +193,9 @@ def process_feature_path_v1(
     with open(feature_path) as feature_f:
         file_header = feature_f.readline().rstrip()
         if file_header.endswith(feature_header):
-            return process_feature_file_v1(
+            process_feature_file_v1(
                 feature_f, protocol, gps_points_list, feature_name, database_path
             )
-        return {}
 
 
 def process_feature_file_v1(
