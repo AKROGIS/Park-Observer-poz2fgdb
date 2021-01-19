@@ -19,12 +19,13 @@ import arcpy
 WORKSPACE = r"D:\MapData\Observer"
 PROTOCOL = "Test_Protocol_v1"
 
+
 def main():
     """Create and upload service definition"""
 
     mxd = os.path.join(WORKSPACE, PROTOCOL + ".mxd")
     map_doc = arcpy.mapping.MapDocument(mxd)
-    # connectionfile = 'GIS Servers/arcgis on MyServer_6080 (publisher).ags'
+    # connectionfile = 'GIS Servers/ArcGIS on MyServer_6080 (publisher).ags'
 
     sddraft = os.path.join(WORKSPACE, PROTOCOL + ".sddraft")
     sd_file = os.path.join(WORKSPACE, PROTOCOL + ".sd")
@@ -54,6 +55,7 @@ def main():
     else:
         # if the sddraft analysis contained errors, display them
         print(analysis["errors"])
+
 
 if __name__ == "__main__":
     main()

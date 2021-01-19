@@ -16,7 +16,7 @@ with `make_service.py`).  They can also be downloaded by the users.
 
 This service supported the _sync to server_ option in Park Observer
 1.x.  However it was rarely used, since most users did not have
-access to the NPS wifi on their mobile devices.  This service is not
+access to the NPS WiFi on their mobile devices.  This service is not
 used with Park Observer 2.0
 
 The `server.py` script has options to be run as an un-secure (HTTP)
@@ -47,9 +47,9 @@ script takes only one required argument, the path of the `*.poz` file.
 It creates the file geodatabase in the current directory unless one
 already exists there.
 
-The script `poz2fgdb.py` loads the modules `csv_loader.py` and 
+The script `poz2fgdb.py` loads the modules `csv_loader.py` and
 `database_creator.py`. `database_creator.py` relies on the file
-`CSV.json` which describes the default mapping from the Park Observer
+`csv.json` which describes the default mapping from the Park Observer
 database schema to a set of related feature classes in a FGDB.
 
 ## 4) ArcGIS Toolbox: `ParkObserver.pyt`

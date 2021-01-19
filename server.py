@@ -6,14 +6,13 @@ A ReST service to support uploading of
 to fie geodatabases on a server.
 
 Written for Python 2.7; does not work with Python 3.x (import HTTPServer).
-To convert to Python 3.x see 
+To convert to Python 3.x see
 https://stackoverflow.com/questions/23264569/python-3-x-basehttpserver-or-http-server
 
 Requires the Esri ArcGIS arcpy module (via csv_loader).
 """
 
 import os
-# import shutil
 import ssl
 import tempfile
 import zipfile
@@ -98,7 +97,7 @@ class SyncHandler(BaseHTTPRequestHandler):
                     try:
                         self.process(file_name, csv_folder)
                     finally:
-                        pass  # shutil.rmtree(csv_folder)
+                        pass  # shutil.rmtree(csv_folder) # requires import shutil
                     self.std_response()
                     self.wfile.write("\tSuccessfully applied the uploaded file")
                 except Exception as ex:
@@ -128,10 +127,13 @@ class SyncHandler(BaseHTTPRequestHandler):
         # get the protocol file
         protocol_path = os.path.join(csv_folder, "protocol.obsprot")
         fgdb_folder = self.root_folder
-        database, protocol_json = csv_loader.DatabaseCreator.database_for_protocol_file(
+        (
+            database,
+            protocol_json,
+        ) = csv_loader.database_creator.database_for_protocol_file(
             protocol_path, fgdb_folder
         )
-        # CSVLoad file
+        # load the csv files
         csv_loader.process_csv_folder(csv_folder, protocol_json, database)
 
 

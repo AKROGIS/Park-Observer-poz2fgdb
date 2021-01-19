@@ -18,7 +18,6 @@ import sys
 import tempfile
 import zipfile
 
-
 import csv_loader
 
 USAGE = "Usage: {0} FILE.poz\n"
@@ -29,16 +28,15 @@ def process(archive):
     extraction_folder = tempfile.mkdtemp()
     try:
         # unzip file
-        with zipfile.ZipFile(archive) as myzip:
-            for name in myzip.namelist():
-                myzip.extract(name, extraction_folder)
+        with zipfile.ZipFile(archive) as my_zip:
+            for name in my_zip.namelist():
+                my_zip.extract(name, extraction_folder)
         # get the protocol file
         protocol_path = os.path.join(extraction_folder, "protocol.obsprot")
         fgdb_folder = os.path.dirname(archive)
-        database, protocol_json = csv_loader.DatabaseCreator.database_for_protocol_file(
-            protocol_path, fgdb_folder
-        )
-        # CSVLoad file
+        make_database = csv_loader.database_creator.database_for_protocol_file
+        database, protocol_json = make_database(protocol_path, fgdb_folder)
+        # load the csv files
         csv_loader.process_csv_folder(extraction_folder, protocol_json, database)
     finally:
         shutil.rmtree(extraction_folder)

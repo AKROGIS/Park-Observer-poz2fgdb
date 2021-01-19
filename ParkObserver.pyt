@@ -21,16 +21,16 @@ Requires dateutil module (pip install python-dateutil).
 
 from __future__ import print_function
 
-import os
-import zipfile
-import tempfile
-import shutil
-import glob
-import dateutil.parser
-import json
 import csv
+import glob
+import json
+import os
+import shutil
+import tempfile
+import zipfile
 
 import arcpy
+import dateutil.parser
 
 
 class Toolbox(object):
@@ -79,7 +79,7 @@ class PozToFgdb(object):
 
 
 # The remainder of this file is stolen from poz2fgdb.py for process()
-# All function and "macro" definitions in CSVLoader.py
+# All function and "macro" definitions in csv_loader.py
 # All function from database_creator.py
 # csv_json definition from csv.json
 # This is done to allow the toolbox to be a self contained file.

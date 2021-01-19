@@ -46,7 +46,7 @@ can be retrieved by sending a GET comment to URI `/error` on port 8080 (i.e. htt
 
 Installation
 ------------
-You will need to put `server.py` in an appropriate location with (`CsvLoader.py`,
+You will need to put `server.py` in an appropriate location with (`csv_loader.py`,
 `database_creator.py` and `csv.json`). You will also need to ensure that port 8080
 is open for TCP from any computer on the domain (see the Firewall setting in the
   Administrative part of the Control Panel)
