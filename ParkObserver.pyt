@@ -46,12 +46,11 @@ class Toolbox(object):
         self.tools = [PozToFgdb]
 
 
-# noinspection PyPep8Naming,PyMethodMayBeStatic,PyUnusedLocal
 class PozToFgdb(object):
     def __init__(self):
         self.label = "Survey To FGDB"
         self.description = (
-            "Creates a File Geodatabase from a Park Observer " "Survey (*.poz)."
+            "Creates a File Geodatabase from a Park Observer Survey (*.poz)."
         )
 
     def getParameterInfo(self):
@@ -90,17 +89,19 @@ class PozToFgdb(object):
 
 
 def process(archive):
+    """Process the survey archive file."""
     extraction_folder = tempfile.mkdtemp()
     try:
         # unzip file
-        with zipfile.ZipFile(archive) as myzip:
-            for name in myzip.namelist():
-                myzip.extract(name, extraction_folder)
+        with zipfile.ZipFile(archive) as my_zip:
+            for name in my_zip.namelist():
+                my_zip.extract(name, extraction_folder)
         # get the protocol file
         protocol_path = os.path.join(extraction_folder, "protocol.obsprot")
         fgdb_folder = os.path.dirname(archive)
-        database, protocol_json = database_for_protocol_file(protocol_path, fgdb_folder)
-        # CSVLoad file
+        make_database = database_for_protocol_file
+        database, protocol_json = make_database(protocol_path, fgdb_folder)
+        # load the csv files
         process_csv_folder(extraction_folder, protocol_json, database)
     finally:
         shutil.rmtree(extraction_folder)
@@ -115,6 +116,13 @@ T, X, Y = 0, 1, 2
 
 
 def process_csv_folder(csv_path, protocol, database_path):
+    """Build a set of feature classes for a folder of CSV files.
+
+    Takes a file path to a folder of CSV files (string), a PO protocol object,
+    and a file path to an existing fgdb (string).
+
+    There is no return value.
+    """
     version = protocol["meta-version"]
     if version <= 2:
         process_csv_folder_v1(csv_path, protocol, database_path)
@@ -123,6 +131,7 @@ def process_csv_folder(csv_path, protocol, database_path):
 
 
 def process_csv_folder_v1(csv_path, protocol, database_path):
+    """Build a set of feature classes for a folder of CSV files (in version 1 format)."""
     csv_files = glob.glob(csv_path + r"\*.csv")
     csv_filenames = [
         os.path.splitext(os.path.basename(csv_file))[0] for csv_file in csv_files
@@ -131,10 +140,10 @@ def process_csv_folder_v1(csv_path, protocol, database_path):
     track_logs_csv_name = protocol["csv"]["track_logs"]["name"]
     gps_points_list = None
     track_log_oids = None
-    # An edit session is needed to add items in a relationship, and to have multiple open insert cursors
-    # the edit variable is not used because the with statement handles saving and aborting the edit session
-    # noinspection PyUnusedLocal
-    with arcpy.da.Editor(database_path) as edit:
+    # An edit session is needed to add items in a relationship,
+    # and to have multiple open insert cursors
+    # The with statement handles saving and aborting the edit session
+    with arcpy.da.Editor(database_path):
         if (
             track_logs_csv_name in csv_filenames
             and gps_points_csv_name in csv_filenames
@@ -161,6 +170,7 @@ def process_csv_folder_v1(csv_path, protocol, database_path):
 def process_tracklog_path_v1(
     csv_path, gps_point_filename, track_log_filename, protocol, database_path
 ):
+    """Process the CSV file of track log and return the object IDs of the new track logs."""
     point_path = os.path.join(csv_path, gps_point_filename + ".csv")
     track_path = os.path.join(csv_path, track_log_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
@@ -172,11 +182,11 @@ def process_tracklog_path_v1(
             track_log_header
         ):
             return process_tracklog_file_v1(point_f, track_f, protocol, database_path)
-        else:
-            return {}
+        return {}
 
 
 def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
+    """Build a track log feature class and return the object IDs of the new track logs."""
     print("building track logs")
     track_log_oids = {}
     mission_field_names, mission_field_types = extract_mission_attributes_from_protocol(
@@ -197,11 +207,10 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
     #    arcpy.RemoveSpatialIndex_management(table)
     with arcpy.da.InsertCursor(table, columns) as cursor:
         for line in csv.reader(track_file):
-            items = line  # line is a list of utf8 encode strings (bytes)
-            protocol_items, other_items = (
-                items[:mission_fields_count],
-                items[mission_fields_count:],
-            )
+            # each line in the CSV is a list of items - utf8 encode strings (bytes)
+            items = line
+            protocol_items = items[:mission_fields_count]
+            other_items = items[mission_fields_count:]
             start_time, end_time = other_items[s_key[T]], other_items[e_key[T]]
             track, last_point = build_track_geometry(
                 point_file, last_point, start_time, end_time, gps_keys
@@ -209,10 +218,10 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
             row = (
                 [track]
                 + [
-                    cast(protocol_items[i], mission_field_types[i])
-                    for i in range(len(protocol_items))
+                    cast(item, mission_field_types[i])
+                    for i, item in enumerate(protocol_items)
                 ]
-                + [cast(other_items[i], types[i]) for i in range(len(other_items))]
+                + [cast(item, types[i]) for i, item in enumerate(other_items)]
             )
             track_log_oids[start_time] = cursor.insertRow(row)
     #    arcpy.AddSpatialIndex_management(table)
@@ -222,19 +231,22 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
 def process_gpspoints_path_v1(
     csv_path, gps_point_filename, protocol, database_path, track_log_oids=None
 ):
+    """Add a CSV file of GPS points to the database."""
     path = os.path.join(csv_path, gps_point_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
-    with open(path) as f:
-        header = f.readline().rstrip()
+    with open(path) as handle:
+        header = handle.readline().rstrip()
         if header == gps_points_header:
-            return process_gpspoints_file_v1(f, track_log_oids, protocol, database_path)
-        else:
-            return {}
+            return process_gpspoints_file_v1(
+                handle, track_log_oids, protocol, database_path
+            )
+        return {}
 
 
 def process_gpspoints_file_v1(
     file_without_header, tracklog_oids, protocol, database_path
 ):
+    """Build a GPS points feature class and return the new features."""
     print("building gps points")
     results = {}
     columns = ["SHAPE@XY"] + protocol["csv"]["gps_points"]["field_names"]
@@ -251,7 +263,7 @@ def process_gpspoints_file_v1(
         for line in file_without_header:
             items = line.split(",")
             shape = (float(items[key[X]]), float(items[key[Y]]))
-            row = [shape] + [cast(items[i], types[i]) for i in range(len(items))]
+            row = [shape] + [cast(item, types[i]) for i, item in enumerate(items)]
             if tracklog_oids:
                 try:
                     current_track_oid = tracklog_oids[items[key[T]]]
@@ -266,21 +278,21 @@ def process_gpspoints_file_v1(
 def process_feature_path_v1(
     csv_path, feature_name, gps_points_list, protocol, database_path
 ):
+    """Add a feature's CSV file to the database."""
     feature_path = os.path.join(csv_path, feature_name + ".csv")
     feature_header = protocol["csv"]["features"]["header"]
     with open(feature_path) as feature_f:
         file_header = feature_f.readline().rstrip()
         if file_header.endswith(feature_header):
-            return process_feature_file_v1(
+            process_feature_file_v1(
                 feature_f, protocol, gps_points_list, feature_name, database_path
             )
-        else:
-            return {}
 
 
 def process_feature_file_v1(
     feature_f, protocol, gps_points_list, feature_name, database_path
 ):
+    """Build a feature class in the database for a named feature."""
     print("building {0} features and observations".format(feature_name))
 
     feature_field_names, feature_field_types = extract_feature_attributes_from_protocol(
@@ -322,10 +334,8 @@ def process_feature_file_v1(
             # Skip empty lines (happens in some buggy versions)
             if not items:
                 break
-            protocol_items, other_items = (
-                items[:feature_fields_count],
-                items[feature_fields_count:],
-            )
+            protocol_items = items[:feature_fields_count]
+            other_items = items[feature_fields_count:]
             feature_items = filter_items_by_index(other_items, feature_field_map)
             observe_items = filter_items_by_index(other_items, observation_field_map)
 
@@ -351,24 +361,24 @@ def process_feature_file_v1(
                 feature = (
                     [feature_shape]
                     + [
-                        cast(protocol_items[i], feature_field_types[i])
-                        for i in range(feature_fields_count)
+                        cast(item, feature_field_types[i])
+                        for i, item in enumerate(protocol_items)
                     ]
                     + [
-                        cast(feature_items[i], feature_types[i])
-                        for i in range(len(feature_items))
+                        cast(item, feature_types[i])
+                        for i, item in enumerate(feature_items)
                     ]
                     + [feature_gps_oid]
                 )
                 observation = (
                     [observation_shape]
                     + [
-                        cast(observe_items[i], observation_types[i])
-                        for i in range(len(observe_items))
+                        cast(item, observation_types[i])
+                        for i, item in enumerate(observe_items)
                     ]
                     + [observation_gps_oid]
                 )
-            except:
+            except Exception:
                 arcpy.AddWarning(
                     "Skipping Bad Record.  Table: {0}; Record: {1}".format(
                         feature_table, line
@@ -388,20 +398,21 @@ def process_feature_file_v1(
 
 
 def cast(string, esri_type):
+    """Convert a string to an esri data type and return it or None."""
     esri_type = esri_type.upper()
-    if esri_type == "DOUBLE" or esri_type == "FLOAT":
+    if esri_type in ("DOUBLE", "FLOAT"):
         return maybe_float(string)
-    elif esri_type == "SHORT" or esri_type == "LONG":
+    if esri_type in ("SHORT", "LONG"):
         return maybe_int(string)
-    elif esri_type == "DATE":
+    if esri_type == "DATE":
         return dateutil.parser.parse(string)
-    elif esri_type == "TEXT" or esri_type == "BLOB":
+    if esri_type in ("TEXT", "BLOB"):
         return string
-    else:
-        return None
+    return None
 
 
 def build_track_geometry(point_file, prior_last_point, start_time, end_time, keys):
+    """Build and return a polyline, and last point for a track log."""
     if prior_last_point:
         path = [prior_last_point]
     else:
@@ -424,6 +435,7 @@ def build_track_geometry(point_file, prior_last_point, start_time, end_time, key
 
 
 def extract_mission_attributes_from_protocol(protocol):
+    """Extract and return the field names/types from a protocol file mission."""
     field_names = []
     field_types = []
     # mission is optional in Park Observer 2.0
@@ -436,6 +448,7 @@ def extract_mission_attributes_from_protocol(protocol):
 
 
 def extract_feature_attributes_from_protocol(protocol, feature_name):
+    """Extract and return the field names/types from a protocol file feature."""
     field_names = []
     field_types = []
     attributes = None
@@ -462,6 +475,7 @@ def filter_items_by_index(items, indexes):
 
 
 def maybe_float(string):
+    """Convert string to a float and return the float or None."""
     try:
         return float(string)
     except ValueError:
@@ -469,6 +483,7 @@ def maybe_float(string):
 
 
 def maybe_int(string):
+    """Convert string to an integer and return the integer or None."""
     try:
         return int(string)
     except ValueError:
@@ -479,7 +494,7 @@ def maybe_int(string):
 # csv.json
 #####################
 
-csv_json = """
+CSV_JSON = """
     {
         "gps_points":{
             "name":"GpsPoints",
@@ -516,8 +531,15 @@ csv_json = """
 
 
 def database_for_protocol_file(protocol_path, fgdb_folder):
-    with open(protocol_path, "r") as f:
-        protocol = json.load(f)
+    """Create an esri file geodatabase from a Park Observer protocol file.
+
+    Takes a file path to the protocol file (string) and a file path to the
+    folder where the geodatabase is to be created (string).
+
+    Returns the file path of the geodatabase (string) and the protocol (object).
+    """
+    with open(protocol_path, "r") as handle:
+        protocol = json.load(handle)
     # I either crashed or I have a good protocol
     if protocol["meta-name"] == "NPS-Protocol-Specification":
         version = protocol["meta-version"]
@@ -526,24 +548,24 @@ def database_for_protocol_file(protocol_path, fgdb_folder):
                 add_missing_csv_section(protocol)
             database = database_for_version1(protocol, fgdb_folder)
             return database, protocol
-        else:
-            print(
-                "Unable to process protocol specification version {1} (in file {0}).".format(
-                    protocol_path, version
-                )
+        print(
+            "Unable to process protocol specification version {1} (in file {0}).".format(
+                protocol_path, version
             )
+        )
     else:
         print("File {0} is not a valid protocol file".format(protocol_path))
     return None, None
 
 
 def add_missing_csv_section(protocol):
-    csv = json.loads(csv_json)
-    protocol["csv"] = csv
+    """Add the default csv property to a protocol object and return the protocol."""
+    protocol["csv"] = json.loads(CSV_JSON)
     return protocol
 
 
 def database_for_version1(protocol, workspace):
+    """Create a geodatabase from a PO protocol file and return the fgdb's path."""
     version = int(protocol["version"])  # get just the major number of the protocol
     raw_database_name = protocol["name"] + "_v" + str(version)
     valid_database_name = arcpy.ValidateTableName(raw_database_name, workspace) + ".gdb"
@@ -554,25 +576,26 @@ def database_for_version1(protocol, workspace):
 
 
 def build_database_version1(protocol, folder, database):
+    """Create a geodatabase from a PO version 1 protocol file and return the fgdb's path."""
     print("Building {0} in {1}".format(database, folder))
     arcpy.CreateFileGDB_management(folder, database)
     fgdb = os.path.join(folder, database)
-    sr = arcpy.SpatialReference(4326)
+    spatial_ref = arcpy.SpatialReference(4326)
     domains = get_domains_from_protocol_v1(protocol)
     aliases = get_aliases_from_protocol_v1(protocol)
     build_domains(fgdb, domains)
-    build_gpspoints_table_version1(fgdb, sr, protocol)
+    build_gpspoints_table_version1(fgdb, spatial_ref, protocol)
     # mission is optional in Park Observer 2.0
     try:
         attribute_list = get_attributes(protocol["mission"], domains, aliases)
     except KeyError:
         attribute_list = []
-    build_tracklog_table_version1(fgdb, sr, attribute_list, protocol)
-    build_observations_table_version1(fgdb, sr, protocol)
+    build_tracklog_table_version1(fgdb, spatial_ref, attribute_list, protocol)
+    build_observations_table_version1(fgdb, spatial_ref, protocol)
     for feature in protocol["features"]:
         build_feature_table_version1(
             fgdb,
-            sr,
+            spatial_ref,
             feature["name"],
             get_attributes(feature, domains, aliases),
             protocol,
@@ -582,6 +605,13 @@ def build_database_version1(protocol, folder, database):
 
 
 def get_attributes(feature, domains=None, aliases=None):
+    """Converts a protocol feature's attributes into esri attribute properties.
+
+    Takes a feature (object) from the protocol file, and dictionary of
+    domains (default None), and a dictionary of aliases (default None).
+
+    Return a list of esri attribute objects for each attribute in the feature.
+    """
     attribute_list = []
     type_table = {
         0: "LONG",
@@ -640,21 +670,24 @@ def get_attributes(feature, domains=None, aliases=None):
     return attribute_list
 
 
-def build_gpspoints_table_version1(fgdb, sr, protocol):
+def build_gpspoints_table_version1(fgdb, spatial_ref, protocol):
+    """Create a feature class of GPS points."""
     table_name = protocol["csv"]["gps_points"]["name"]
     field_names = protocol["csv"]["gps_points"]["field_names"]
     field_types = protocol["csv"]["gps_points"]["field_types"]
-    arcpy.CreateFeatureclass_management(fgdb, table_name, "POINT", "#", "#", "#", sr)
+    arcpy.CreateFeatureclass_management(
+        fgdb, table_name, "POINT", "#", "#", "#", spatial_ref
+    )
     # doing multiple operations on a view is faster than on a table
     view = arcpy.MakeTableView_management(os.path.join(fgdb, table_name), "view")
     try:
         # Protocol Attributes
         #  - None
         # Standard Attributes
-        for i in range(len(field_names)):
-            alias = field_names[i].replace("_", " ")
+        for i, field_name in enumerate(field_names):
+            alias = field_name.replace("_", " ")
             arcpy.AddField_management(
-                view, field_names[i], field_types[i], "", "", "", alias
+                view, field_name, field_types[i], "", "", "", alias
             )
         # Links to related data
         arcpy.AddField_management(view, "TrackLog_ID", "LONG")
@@ -662,11 +695,14 @@ def build_gpspoints_table_version1(fgdb, sr, protocol):
         arcpy.Delete_management(view)
 
 
-def build_tracklog_table_version1(fgdb, sr, attributes, protocol):
+def build_tracklog_table_version1(fgdb, spatial_ref, attributes, protocol):
+    """Create a feature class of track logs."""
     table_name = protocol["csv"]["track_logs"]["name"]
     field_names = protocol["csv"]["track_logs"]["field_names"]
     field_types = protocol["csv"]["track_logs"]["field_types"]
-    arcpy.CreateFeatureclass_management(fgdb, table_name, "POLYLINE", "#", "#", "#", sr)
+    arcpy.CreateFeatureclass_management(
+        fgdb, table_name, "POLYLINE", "#", "#", "#", spatial_ref
+    )
     view = arcpy.MakeTableView_management(os.path.join(fgdb, table_name), "view")
     try:
         # Protocol Attributes
@@ -684,10 +720,10 @@ def build_tracklog_table_version1(fgdb, sr, attributes, protocol):
                 attribute["domain"],
             )
         # Standard Attributes
-        for i in range(len(field_names)):
-            alias = field_names[i].replace("_", " ")
+        for i, field_name in enumerate(field_names):
+            alias = field_name.replace("_", " ")
             arcpy.AddField_management(
-                view, field_names[i], field_types[i], "", "", "", alias
+                view, field_name, field_types[i], "", "", "", alias
             )
             # Links to related data
             #  - None
@@ -695,20 +731,23 @@ def build_tracklog_table_version1(fgdb, sr, attributes, protocol):
         arcpy.Delete_management(view)
 
 
-def build_observations_table_version1(fgdb, sr, protocol):
+def build_observations_table_version1(fgdb, spatial_ref, protocol):
+    """Create a feature class of PO observation locations."""
     table_name = protocol["csv"]["features"]["obs_name"]
     field_names = protocol["csv"]["features"]["obs_field_names"]
     field_types = protocol["csv"]["features"]["obs_field_types"]
-    arcpy.CreateFeatureclass_management(fgdb, table_name, "POINT", "", "", "", sr)
+    arcpy.CreateFeatureclass_management(
+        fgdb, table_name, "POINT", "", "", "", spatial_ref
+    )
     view = arcpy.MakeTableView_management(os.path.join(fgdb, table_name), "view")
     try:
         # Protocol Attributes
         #  - None
         # Standard Attributes
-        for i in range(len(field_names)):
-            alias = field_names[i].replace("_", " ")
+        for i, field_name in enumerate(field_names):
+            alias = field_name.replace("_", " ")
             arcpy.AddField_management(
-                view, field_names[i], field_types[i], "", "", "", alias
+                view, field_name, field_types[i], "", "", "", alias
             )
         # Link to related data
         arcpy.AddField_management(view, "GpsPoint_ID", "LONG")
@@ -716,12 +755,13 @@ def build_observations_table_version1(fgdb, sr, protocol):
         arcpy.Delete_management(view)
 
 
-def build_feature_table_version1(fgdb, sr, raw_name, attributes, protocol):
+def build_feature_table_version1(fgdb, spatial_ref, raw_name, attributes, protocol):
+    """Create a feature class of PO observation items (features)."""
     valid_feature_name = arcpy.ValidateTableName(raw_name, fgdb)
     field_names = protocol["csv"]["features"]["feature_field_names"]
     field_types = protocol["csv"]["features"]["feature_field_types"]
     arcpy.CreateFeatureclass_management(
-        fgdb, valid_feature_name, "POINT", "#", "#", "#", sr
+        fgdb, valid_feature_name, "POINT", "#", "#", "#", spatial_ref
     )
     view = arcpy.MakeTableView_management(
         os.path.join(fgdb, valid_feature_name), "view"
@@ -742,10 +782,10 @@ def build_feature_table_version1(fgdb, sr, raw_name, attributes, protocol):
                 attribute["domain"],
             )
         # Standard Attributes
-        for i in range(len(field_names)):
-            alias = field_names[i].replace("_", " ")
+        for i, field_name in enumerate(field_names):
+            alias = field_name.replace("_", " ")
             arcpy.AddField_management(
-                view, field_names[i], field_types[i], "", "", "", alias
+                view, field_name, field_types[i], "", "", "", alias
             )
         # Link to related data
         arcpy.AddField_management(view, "GpsPoint_ID", "LONG")
@@ -755,6 +795,7 @@ def build_feature_table_version1(fgdb, sr, raw_name, attributes, protocol):
 
 
 def build_relationships(fgdb, protocol):
+    """Create the relationships between the various PO feature classes."""
     gps_points_table = os.path.join(fgdb, protocol["csv"]["gps_points"]["name"])
     track_logs_table = os.path.join(fgdb, protocol["csv"]["track_logs"]["name"])
     observations_table = os.path.join(fgdb, "Observations")
@@ -818,6 +859,7 @@ def build_relationships(fgdb, protocol):
 
 
 def build_domains(fgdb, domains):
+    """Create the esri domains (picklists) for track logs and features."""
     arcpy.CreateDomain_management(
         fgdb, "YesNoBoolean", "Yes/No values", "SHORT", "CODED"
     )
@@ -828,11 +870,12 @@ def build_domains(fgdb, domains):
         description = "Valid values for {0}".format(domain)
         arcpy.CreateDomain_management(fgdb, name, description, "SHORT", "CODED")
         items = domains[domain]
-        for i in range(len(items)):
-            arcpy.AddCodedValueToDomain_management(fgdb, name, i, items[i])
+        for i, item in enumerate(items):
+            arcpy.AddCodedValueToDomain_management(fgdb, name, i, item)
 
 
 def get_aliases_from_protocol_v1(protocol):
+    """Create esri field name aliases using the attribute titles from the  input form."""
     results = {}
     # mission is optional in Park Observer 2.0
     try:
@@ -873,6 +916,7 @@ def get_aliases_from_protocol_v1(protocol):
 
 
 def get_domains_from_protocol_v1(protocol):
+    """Return a dictionary of valid values (list) for each attribute name (string)."""
     results = {}
     # mission, attributes, dialog and bind are optional properties in Park Observer 2.0
     if "mission" in protocol:
