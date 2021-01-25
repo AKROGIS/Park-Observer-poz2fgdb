@@ -405,7 +405,13 @@ def cast(string, esri_type):
     if esri_type in ("SHORT", "LONG"):
         return maybe_int(string)
     if esri_type == "DATE":
-        return dateutil.parser.parse(string)
+        # In Python3, the parser complains (issues a one time warning that kills
+        # the app), that the AKST/AKDT timezone suffix could be ambiguous (it isn't
+        # but oh well), and that in future version it might be an exception.
+        # Since ArcGIS does not understand time zones, and we have two date fields
+        # one for UTC and one for local, we can ignore the timezone info while
+        # parsing.
+        return dateutil.parser.parse(string, ignoretz=True)
     if esri_type in ("TEXT", "BLOB"):
         return string
     return None
