@@ -5,7 +5,8 @@ A simple python script which creates a map service from a map file (MXD).
 
 UNFINISHED
 
-Written for Python 2.7; may work with Python 3.x.
+Written for Python 2.7; will not work with Python 3.x.
+TO use with Python 3.x (Pro) convert arcpy.mapping to arcpy.mp
 Requires the Esri ArcGIS arcpy module.
 """
 

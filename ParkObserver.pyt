@@ -14,9 +14,9 @@ Version: 2019-07-22
   Catch parsing errors on feature tables and issue a warning
   Ensure that table name that I use match table names created by ArcGIS (i.e. space to '_')
 
-Written for Python 2.7; may work with Python 3.3+.
+Written for Python 2.7; works with Python 3.3+.
 Requires the Esri ArcGIS arcpy module.
-Requires dateutil module (pip install python-dateutil).
+Requires python-dateutil module which is included with ArcGIS 10.x and Pro 2.x.
 """
 
 from __future__ import print_function

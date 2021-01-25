@@ -3,9 +3,13 @@
 """
 Module to load Park Observer CSV files into an esri file geodatabase.
 
-Written for Python 2.7; may work with Python 3.x.
+Written for Python 2.7; works with Python 3.x.
 Requires the Esri ArcGIS arcpy module.
-Requires dateutil module (pip install python-dateutil).
+Requires python-dateutil module which is included with ArcGIS 10.x and Pro 2.x.
+
+NOTE: esri does not provide python wrappers for the objects in arcpy.da, so
+they will generate errors with linters and IDE's cannot do code completion.
+See: https://gis.stackexchange.com/a/120517
 """
 
 from __future__ import print_function

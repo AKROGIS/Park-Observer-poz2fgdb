@@ -3,7 +3,7 @@
 """
 Module to create an esri file geodatabase for a Park Observer protocol file.
 
-Written for Python 2.7; may work with Python 3.x.
+Written for Python 2.7; works with Python 3.x.
 Requires the Esri ArcGIS arcpy module.
 """
 
