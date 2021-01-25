@@ -68,6 +68,14 @@ Do not edit `ParkObserver.pyt` directly.  Edit `csv_loader.py` and/or
 `database_creator.py`, and then test with `poz2fgdb.py`. Once changes have been
 verified, the changes can be copied to `ParkObserver.pyt`.
 
+### Testing
+
+There is a collection of survey archives (`*.poz` files) in the GIS Team network
+drive (`T:\PROJECTS\AKR\ParkObserver\pozs`) that can be used for testing changes
+to this tool.  There are several `*.poz` files in that folder that will fail
+for various good reasons.  Be sure to see the file `testing Notes.md` in the
+`poz` folder for details on why.
+
 ### Deploy
 
 Copy the updated `ParkObserver.pyt` to the deployed location of the
@@ -82,7 +90,9 @@ ArcGIS users can open the toolbox in ArcMap, ArcCatalog, or Pro.  The only input
 parameter is the file system path to the survey archive file (`*.poz`).  If a
 file geodatabase with the correct name exists in the same folder as the archive
 it will get new data appended to it, otherwise a new geodatabase will be created
-and the data added to it.
+and the data added to it.  **WARNING** If you convert the same `*.poz` file
+twice with the same database, the survey will be added twice and you will get
+have items in the database.
 
 More detailed usage instructions can be found on the
 [Park Observer website](https://github.com/AKROGIS/Park-Observer-website).
