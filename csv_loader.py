@@ -12,11 +12,13 @@ they will generate errors with linters and IDE's cannot do code completion.
 See: https://gis.stackexchange.com/a/120517
 """
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import csv
+from io import open
 import glob
 import os
+import sys
 
 import arcpy
 import dateutil.parser
@@ -25,6 +27,14 @@ import database_creator
 
 # MACROS: Key indexes for GPS data in CSV data (T=Timestamp, X=Longitude, Y=Latitude)
 T, X, Y = 0, 1, 2
+
+
+def open_csv_read(filename):
+    """Open a file for CSV reading that is compatible with unicode and Python 2/3"""
+    if sys.version_info[0] < 3: 
+        return open(filename,'rb')
+    else:
+        return open(filename, 'r', encoding='utf8', newline='')
 
 
 def process_csv_folder(csv_path, protocol, database_path):
@@ -87,7 +97,7 @@ def process_tracklog_path_v1(
     track_path = os.path.join(csv_path, track_log_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
     track_log_header = ",".join(protocol["csv"]["track_logs"]["field_names"])
-    with open(point_path) as point_f, open(track_path) as track_f:
+    with open(point_path, "r", encoding="utf-8") as point_f, open_csv_read(track_path) as track_f:
         point_header = point_f.readline().rstrip()
         track_header = track_f.readline().rstrip()
         if point_header == gps_points_header and track_header.endswith(
@@ -119,8 +129,13 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
     #    arcpy.RemoveSpatialIndex_management(table)
     with arcpy.da.InsertCursor(table, columns) as cursor:
         for line in csv.reader(track_file):
-            # each line in the CSV is a list of items - utf8 encode strings (bytes)
-            items = line
+            # each line in the CSV is a list of items; the type of item is
+            #  str (unicode) in Python 3
+            #  utf8 encode byte string in Python 2, converted to unicode strings
+            if sys.version_info[0] < 3:
+                items = [item.decode('utf-8') for item in line]
+            else:
+                items = line
             protocol_items = items[:mission_fields_count]
             other_items = items[mission_fields_count:]
             start_time, end_time = other_items[s_key[T]], other_items[e_key[T]]
@@ -146,7 +161,7 @@ def process_gpspoints_path_v1(
     """Add a CSV file of GPS points to the database."""
     path = os.path.join(csv_path, gps_point_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
-    with open(path) as handle:
+    with open(path, "r", encoding="utf-8") as handle:
         header = handle.readline().rstrip()
         if header == gps_points_header:
             return process_gpspoints_file_v1(
@@ -193,7 +208,7 @@ def process_feature_path_v1(
     """Add a feature's CSV file to the database."""
     feature_path = os.path.join(csv_path, feature_name + ".csv")
     feature_header = protocol["csv"]["features"]["header"]
-    with open(feature_path) as feature_f:
+    with open_csv_read(feature_path) as feature_f:
         file_header = feature_f.readline().rstrip()
         if file_header.endswith(feature_header):
             process_feature_file_v1(
@@ -242,10 +257,16 @@ def process_feature_file_v1(
         observation_table, observation_columns
     ) as observation_cursor:
         for line in csv.reader(feature_f):
-            items = line  # line is a list of utf8 encode strings (bytes)
             # Skip empty lines (happens in some buggy versions)
-            if not items:
+            if not line:
                 break
+            # each line in the CSV is a list of items; the type of item is
+            #  str (unicode) in Python 3 
+            #  utf8 encode byte string in Python 2, converted to unicode strings
+            if sys.version_info[0] < 3:
+                items = [item.decode('utf-8') for item in line]
+            else:
+                items = line
             protocol_items = items[:feature_fields_count]
             other_items = items[feature_fields_count:]
             feature_items = filter_items_by_index(other_items, feature_field_map)
