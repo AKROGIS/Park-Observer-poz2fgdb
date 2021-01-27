@@ -36,8 +36,12 @@ import dateutil.parser
 
 
 class Toolbox(object):
-    """Define the toolbox (the name of the toolbox is the name of the
-    .pyt file)."""
+    """
+    Defines the toolbox (the name of the toolbox is the name of the .pyt file).
+    """
+
+    # This class is specified by esri's Toolbox framework
+    # pylint: disable=useless-object-inheritance,too-few-public-methods
 
     def __init__(self):
         self.label = "Park Observer Toolbox"
@@ -49,6 +53,13 @@ class Toolbox(object):
 
 
 class PozToFgdb(object):
+    """
+    GP Tool to convert Park Observer survey archive to esri file geodatabase.
+    """
+
+    # A GP Tool class structure is specified by esri's Toolbox framework.
+    # pylint: disable=useless-object-inheritance,invalid-name,no-self-use, unused-argument
+
     def __init__(self):
         self.label = "Survey To FGDB"
         self.description = (
@@ -56,6 +67,7 @@ class PozToFgdb(object):
         )
 
     def getParameterInfo(self):
+        """Set up the input form with the parameter list and options."""
         survey = arcpy.Parameter(
             name="survey",
             displayName="Observer Survey",
@@ -69,12 +81,15 @@ class PozToFgdb(object):
         return parameters
 
     def updateParameters(self, parameters):
-        pass
+        """Update the parameter values after a user's parameter change."""
+        # Nothing to do.
 
     def updateMessages(self, parameters):
-        pass
+        """Update Error, Warning, and Info messages after a user's parameter change."""
+        # Nothing to do.
 
     def execute(self, parameters, messages):
+        """The user has press 'GO', so execute the task."""
         survey = parameters[0].valueAsText
         process(survey)
 
@@ -119,10 +134,9 @@ T, X, Y = 0, 1, 2
 
 def open_csv_read(filename):
     """Open a file for CSV reading that is compatible with unicode and Python 2/3"""
-    if sys.version_info[0] < 3: 
-        return open(filename,'rb')
-    else:
-        return open(filename, 'r', encoding='utf8', newline='')
+    if sys.version_info[0] < 3:
+        return open(filename, "rb")
+    return open(filename, "r", encoding="utf8", newline="")
 
 
 def process_csv_folder(csv_path, protocol, database_path):
@@ -185,7 +199,9 @@ def process_tracklog_path_v1(
     track_path = os.path.join(csv_path, track_log_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
     track_log_header = ",".join(protocol["csv"]["track_logs"]["field_names"])
-    with open(point_path, "r", encoding="utf-8") as point_f, open_csv_read(track_path) as track_f:
+    with open(point_path, "r", encoding="utf-8") as point_f, open_csv_read(
+        track_path
+    ) as track_f:
         point_header = point_f.readline().rstrip()
         track_header = track_f.readline().rstrip()
         if point_header == gps_points_header and track_header.endswith(
@@ -221,7 +237,7 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
             #  str (unicode) in Python 3
             #  utf8 encode byte string in Python 2, converted to unicode strings
             if sys.version_info[0] < 3:
-                items = [item.decode('utf-8') for item in line]
+                items = [item.decode("utf-8") for item in line]
             else:
                 items = line
             protocol_items = items[:mission_fields_count]
@@ -349,10 +365,10 @@ def process_feature_file_v1(
             if not line:
                 break
             # each line in the CSV is a list of items; the type of item is
-            #  str (unicode) in Python 3 
+            #  str (unicode) in Python 3
             #  utf8 encode byte string in Python 2, converted to unicode strings
             if sys.version_info[0] < 3:
-                items = [item.decode('utf-8') for item in line]
+                items = [item.decode("utf-8") for item in line]
             else:
                 items = line
             protocol_items = items[:feature_fields_count]

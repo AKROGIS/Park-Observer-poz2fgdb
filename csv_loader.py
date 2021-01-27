@@ -31,10 +31,9 @@ T, X, Y = 0, 1, 2
 
 def open_csv_read(filename):
     """Open a file for CSV reading that is compatible with unicode and Python 2/3"""
-    if sys.version_info[0] < 3: 
-        return open(filename,'rb')
-    else:
-        return open(filename, 'r', encoding='utf8', newline='')
+    if sys.version_info[0] < 3:
+        return open(filename, "rb")
+    return open(filename, "r", encoding="utf8", newline="")
 
 
 def process_csv_folder(csv_path, protocol, database_path):
@@ -97,7 +96,9 @@ def process_tracklog_path_v1(
     track_path = os.path.join(csv_path, track_log_filename + ".csv")
     gps_points_header = ",".join(protocol["csv"]["gps_points"]["field_names"])
     track_log_header = ",".join(protocol["csv"]["track_logs"]["field_names"])
-    with open(point_path, "r", encoding="utf-8") as point_f, open_csv_read(track_path) as track_f:
+    with open(point_path, "r", encoding="utf-8") as point_f, open_csv_read(
+        track_path
+    ) as track_f:
         point_header = point_f.readline().rstrip()
         track_header = track_f.readline().rstrip()
         if point_header == gps_points_header and track_header.endswith(
@@ -133,7 +134,7 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
             #  str (unicode) in Python 3
             #  utf8 encode byte string in Python 2, converted to unicode strings
             if sys.version_info[0] < 3:
-                items = [item.decode('utf-8') for item in line]
+                items = [item.decode("utf-8") for item in line]
             else:
                 items = line
             protocol_items = items[:mission_fields_count]
@@ -261,10 +262,10 @@ def process_feature_file_v1(
             if not line:
                 break
             # each line in the CSV is a list of items; the type of item is
-            #  str (unicode) in Python 3 
+            #  str (unicode) in Python 3
             #  utf8 encode byte string in Python 2, converted to unicode strings
             if sys.version_info[0] < 3:
-                items = [item.decode('utf-8') for item in line]
+                items = [item.decode("utf-8") for item in line]
             else:
                 items = line
             protocol_items = items[:feature_fields_count]
