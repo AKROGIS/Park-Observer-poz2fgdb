@@ -9,6 +9,7 @@ Requires the Esri ArcGIS arcpy module.
 
 from __future__ import print_function
 
+from io import open
 import json
 import os
 
@@ -23,7 +24,7 @@ def database_for_protocol_file(protocol_path, fgdb_folder):
 
     Returns the file path of the geodatabase (string) and the protocol (object).
     """
-    with open(protocol_path, "r") as handle:
+    with open(protocol_path, "r", encoding="utf-8") as handle:
         protocol = json.load(handle)
     # I either crashed or I have a good protocol
     if protocol["meta-name"] == "NPS-Protocol-Specification":
@@ -47,7 +48,7 @@ def add_missing_csv_section(protocol):
     """Add the default csv property to a protocol object and return the protocol."""
     script_dir = os.path.dirname(os.path.realpath(__file__))
     csv_path = os.path.join(script_dir, "csv.json")
-    with open(csv_path, "r") as handle:
+    with open(csv_path, "r", encoding="utf-8") as handle:
         csv = json.load(handle)
         protocol["csv"] = csv
     return protocol

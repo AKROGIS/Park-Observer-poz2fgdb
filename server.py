@@ -12,6 +12,7 @@ https://stackoverflow.com/questions/23264569/python-3-x-basehttpserver-or-http-s
 Requires the Esri ArcGIS arcpy module (via csv_loader).
 """
 
+from io import open
 import os
 import ssl
 import tempfile
@@ -41,7 +42,7 @@ class SyncHandler(BaseHTTPRequestHandler):
             self.std_response()
             if os.path.exists(self.error_log):
                 self.wfile.write("Error Log contents:\n")
-                with open(self.error_log) as handle:
+                with open(self.error_log, "r", encoding= "utf-8") as handle:
                     self.wfile.write(handle.read())
             else:
                 self.wfile.write("There are no errors to report.")
@@ -92,6 +93,7 @@ class SyncHandler(BaseHTTPRequestHandler):
                 file_desc, file_name = tempfile.mkstemp(dir=self.upload_folder)
                 try:
                     with open(file_name, "wb") as handle:
+                        # save (write) the binary upload (zip file) to a temp file
                         handle.write(data)
                     csv_folder = tempfile.mkdtemp(dir=self.upload_folder)
                     try:
@@ -106,7 +108,7 @@ class SyncHandler(BaseHTTPRequestHandler):
                         self.log_date_time_string(), type(ex).__name__, ex
                     )
                     self.wfile.write(msg)
-                    with open(self.error_log, "a") as handle:
+                    with open(self.error_log, "a", encoding= "utf-8") as handle:
                         handle.write(msg)
                 finally:
                     os.close(file_desc)

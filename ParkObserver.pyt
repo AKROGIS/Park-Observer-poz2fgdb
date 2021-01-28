@@ -581,7 +581,7 @@ def database_for_protocol_file(protocol_path, fgdb_folder):
 
     Returns the file path of the geodatabase (string) and the protocol (object).
     """
-    with open(protocol_path, "r") as handle:
+    with open(protocol_path, "r", encoding="utf-8") as handle:
         protocol = json.load(handle)
     # I either crashed or I have a good protocol
     if protocol["meta-name"] == "NPS-Protocol-Specification":
