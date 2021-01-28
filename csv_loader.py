@@ -12,7 +12,7 @@ they will generate errors with linters and IDE's cannot do code completion.
 See: https://gis.stackexchange.com/a/120517
 """
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 from io import open

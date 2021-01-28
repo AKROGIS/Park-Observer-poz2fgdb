@@ -19,7 +19,7 @@ Requires the Esri ArcGIS arcpy module.
 Requires python-dateutil module which is included with ArcGIS 10.x and Pro 2.x.
 """
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 import glob

@@ -10,7 +10,7 @@ Written for Python 2.7; works with Python 3.x.
 Requires the Esri ArcGIS arcpy module.
 """
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import shutil

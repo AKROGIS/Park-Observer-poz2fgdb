@@ -10,7 +10,7 @@ TO use with Python 3.x (Pro) convert arcpy.mapping to arcpy.mp
 Requires the Esri ArcGIS arcpy module.
 """
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
