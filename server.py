@@ -44,7 +44,7 @@ class SyncHandler(BaseHTTPRequestHandler):
             self.std_response()
             if os.path.exists(self.error_log):
                 self.wfile.write("Error Log contents:\n")
-                with open(self.error_log, "r", encoding= "utf-8") as handle:
+                with open(self.error_log, "r", encoding="utf-8") as handle:
                     self.wfile.write(handle.read())
             else:
                 self.wfile.write("There are no errors to report.")
@@ -110,7 +110,7 @@ class SyncHandler(BaseHTTPRequestHandler):
                         self.log_date_time_string(), type(ex).__name__, ex
                     )
                     self.wfile.write(msg)
-                    with open(self.error_log, "a", encoding= "utf-8") as handle:
+                    with open(self.error_log, "a", encoding="utf-8") as handle:
                         handle.write(msg)
                 finally:
                     os.close(file_desc)
