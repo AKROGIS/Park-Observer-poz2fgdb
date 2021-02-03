@@ -610,7 +610,7 @@ def add_missing_csv_section(protocol):
 def database_for_version1(protocol, workspace):
     """Create a geodatabase from a PO protocol file and return the fgdb's path."""
     version = int(protocol["version"])  # get just the major number of the protocol
-    raw_database_name = protocol["name"] + "_v" + str(version)
+    raw_database_name = "{0}_v{1}".format(protocol["name"], version)
     valid_database_name = arcpy.ValidateTableName(raw_database_name, workspace) + ".gdb"
     database = os.path.join(workspace, valid_database_name)
     if not arcpy.Exists(database):
