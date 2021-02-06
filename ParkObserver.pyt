@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 An ArcGIS Python toolbox for for creating an esri file geodatabase from a
 [Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive.

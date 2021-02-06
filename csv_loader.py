@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Module to load Park Observer CSV files into an esri file geodatabase.
 

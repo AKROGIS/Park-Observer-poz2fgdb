@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Park Observer Sync Tool
 

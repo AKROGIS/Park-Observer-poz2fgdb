@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 A simple python script which creates a map service from a map file (MXD).
 

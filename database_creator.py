@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Module to create an esri file geodatabase for a Park Observer protocol file.
 

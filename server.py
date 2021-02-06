@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 A ReST service to support uploading of
 [Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive
