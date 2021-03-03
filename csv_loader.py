@@ -109,6 +109,7 @@ def process_tracklog_path_v1(
 
 def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
     """Build a track log feature class and return the object IDs of the new track logs."""
+    # pylint: disable=too-many-locals
     print("building track logs")
     track_log_oids = {}
     mission_field_names, mission_field_types = extract_mission_attributes_from_protocol(
@@ -174,6 +175,7 @@ def process_gpspoints_file_v1(
     file_without_header, tracklog_oids, protocol, database_path
 ):
     """Build a GPS points feature class and return the new features."""
+    # pylint: disable=too-many-locals
     print("building gps points")
     results = {}
     columns = ["SHAPE@XY"] + protocol["csv"]["gps_points"]["field_names"]
@@ -220,6 +222,7 @@ def process_feature_file_v1(
     feature_f, protocol, gps_points_list, feature_name, database_path
 ):
     """Build a feature class in the database for a named feature."""
+    # pylint: disable=too-many-locals,broad-except
     print("building {0} features and observations".format(feature_name))
 
     feature_field_names, feature_field_types = extract_feature_attributes_from_protocol(

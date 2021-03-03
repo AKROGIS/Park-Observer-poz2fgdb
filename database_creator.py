@@ -365,6 +365,7 @@ def build_domains(fgdb, domains):
 
 def get_aliases_from_protocol_v1(protocol):
     """Create esri field name aliases using the attribute titles from the  input form."""
+    # pylint: disable=too-many-nested-blocks
     results = {}
     # mission is optional in Park Observer 2.0
     try:
@@ -406,6 +407,7 @@ def get_aliases_from_protocol_v1(protocol):
 
 def get_domains_from_protocol_v1(protocol):
     """Return a dictionary of valid values (list) for each attribute name (string)."""
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     results = {}
     # mission, attributes, dialog and bind are optional properties in Park Observer 2.0
     if "mission" in protocol:
