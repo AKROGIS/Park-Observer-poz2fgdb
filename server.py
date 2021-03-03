@@ -4,9 +4,7 @@ A ReST service to support uploading of
 [Park Observer](https://github.com/AKROGIS/Park-Observer) survey archive
 to fie geodatabases on a server.
 
-Written for Python 2.7; does not work with Python 3.x (import HTTPServer).
-To convert to Python 3.x see
-https://stackoverflow.com/questions/23264569/python-3-x-basehttpserver-or-http-server
+Works with Python 2.7 and Python 3.x
 
 Requires the Esri ArcGIS arcpy module (via csv_loader).
 """
@@ -19,9 +17,19 @@ import ssl
 import tempfile
 import zipfile
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+try:
+    # Python 2
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+except ImportError:
+    # python 3
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import csv_loader
+
+
+def utf8(text):
+    """return unicode text as a utf-8 encoded byte string."""
+    return text.encode("utf8")
 
 
 class SyncHandler(BaseHTTPRequestHandler):
@@ -42,20 +50,20 @@ class SyncHandler(BaseHTTPRequestHandler):
         if self.path == "/error":
             self.std_response()
             if os.path.exists(self.error_log):
-                self.wfile.write("Error Log contents:\n")
-                with open(self.error_log, "r", encoding="utf-8") as handle:
+                self.wfile.write(utf8("Error Log contents:\n"))
+                with open(self.error_log, "rb") as handle:
                     self.wfile.write(handle.read())
             else:
-                self.wfile.write("There are no errors to report.")
+                self.wfile.write(utf8("There are no errors to report."))
         elif self.path == "/dir":
             self.std_response()
-            self.wfile.write("Databases:\n")
+            self.wfile.write(utf8("Databases:\n"))
             for filename in os.listdir(self.root_folder):
                 if filename not in ("upload", "error.log"):
-                    self.wfile.write("\t{0}\n".format(filename))
+                    self.wfile.write(utf8("\t{0}\n".format(filename)))
         elif self.path == "/help":
             self.std_response()
-            self.wfile.write(self.usage)
+            self.wfile.write(utf8(self.usage))
         elif self.path == "/load":
             html = """
         <html><body>
@@ -69,17 +77,18 @@ class SyncHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.send_header("Content-length", len(html))
             self.end_headers()
-            self.wfile.write(html)
+            self.wfile.write(utf8(html))
         else:
             self.std_response()
-            self.wfile.write("Unknown command request '{0}'\n".format(self.path[1:]))
-            self.wfile.write(self.usage)
+            msg = "Unknown command request '{0}'\n"
+            self.wfile.write(utf8(msg.format(self.path[1:])))
+            self.wfile.write(utf8(self.usage))
 
     def std_response(self):
         self.send_response(200)
         self.send_header("Content-type", "text")
         self.end_headers()
-        self.wfile.write("{0}\n".format(self.name))
+        self.wfile.write(utf8("{0}\n".format(self.name)))
 
     def err_response(self):
         self.send_response(500)
@@ -102,13 +111,13 @@ class SyncHandler(BaseHTTPRequestHandler):
                     finally:
                         pass  # shutil.rmtree(csv_folder) # requires import shutil
                     self.std_response()
-                    self.wfile.write("\tSuccessfully applied the uploaded file")
+                    self.wfile.write(utf8("\tSuccessfully applied the uploaded file"))
                 except Exception as ex:
                     self.err_response()
                     msg = "{0}:{1} - {2}\n".format(
                         self.log_date_time_string(), type(ex).__name__, ex
                     )
-                    self.wfile.write(msg)
+                    self.wfile.write(utf8(msg))
                     with open(self.error_log, "a", encoding="utf-8") as handle:
                         handle.write(msg)
                 finally:
@@ -116,11 +125,8 @@ class SyncHandler(BaseHTTPRequestHandler):
                     # os.remove(file_name)
             except Exception as ex:
                 self.err_response()
-                self.wfile.write(
-                    "Unable to create/open temporary file on server:\n\t{0} - {1}".format(
-                        type(ex).__name__, ex
-                    )
-                )
+                msg = "Unable to create/open temporary file on server:\n\t{0} - {1}"
+                self.wfile.write(utf8(msg.format(type(ex).__name__, ex)))
 
     def process(self, filename, csv_folder):
         # unzip file
