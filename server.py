@@ -27,16 +27,43 @@ except ImportError:
 import csv_loader
 
 
+class Config(object):
+    """Namespace for configuration parameters. Edit as needed."""
+
+    # pylint: disable=useless-object-inheritance,too-few-public-methods
+
+    # Name of this service, written to browser with all responses.
+    name = "Park Observer Sync Tool"
+
+    # Base path for all other files/folders.
+    root_folder = r"E:\MapData\Observer"
+
+    # name of the folder where uploaded data files will be saved/processed.
+    upload_folder_name = "upload"
+
+    # name of a file to track errors.
+    error_log_name = "error.log"
+
+    # Secure Service
+    # If true creates an https server on port 8443,
+    # else it is an http server on port 8080
+    # a secure service requires `import ssl`
+    secure = True
+
+
 def utf8(text):
     """return unicode text as a utf-8 encoded byte string."""
     return text.encode("utf8")
 
 
+# pylint: disable=broad-except,invalid-name
+
+
 class SyncHandler(BaseHTTPRequestHandler):
-    root_folder = r"E:\MapData\Observer"
-    upload_folder = os.path.join(root_folder, "upload")
-    error_log = os.path.join(root_folder, "error.log")
-    name = "Park Observer Sync Tool"
+    """A simple HTTP server."""
+
+    upload_folder = os.path.join(Config.root_folder, Config.upload_folder_name)
+    error_log = os.path.join(Config.root_folder, Config.error_log_name)
     usage = (
         "Usage:\n"
         + "\tPOST with /sync with a zip containing the protocol and CSV files\n"
@@ -45,8 +72,17 @@ class SyncHandler(BaseHTTPRequestHandler):
         + "\tGET with /error to list the error log file\n"
         + "\tGET with /help for this message\n"
     )
+    form_body = """
+        <html><body>
+          <form enctype="multipart/form-data" method="post" action="sync">
+            <p>File: <input type="file" name="file"></p>
+            <p><input type="submit" value="Upload"></p>
+          </form>
+        </body></html>
+    """
 
     def do_GET(self):
+        """Handle a GET request."""
         if self.path == "/error":
             self.std_response()
             if os.path.exists(self.error_log):
@@ -58,26 +94,19 @@ class SyncHandler(BaseHTTPRequestHandler):
         elif self.path == "/dir":
             self.std_response()
             self.wfile.write(utf8("Databases:\n"))
-            for filename in os.listdir(self.root_folder):
+            for filename in os.listdir(Config.root_folder):
                 if filename not in ("upload", "error.log"):
                     self.wfile.write(utf8("\t{0}\n".format(filename)))
         elif self.path == "/help":
             self.std_response()
             self.wfile.write(utf8(self.usage))
         elif self.path == "/load":
-            html = """
-        <html><body>
-        <form enctype="multipart/form-data" method="post" action="sync">
-        <p>File: <input type="file" name="file"></p>
-        <p><input type="submit" value="Upload"></p>
-        </form>
-        </body></html>
-        """
+            data = utf8(self.form_body)
             self.send_response(200)
             self.send_header("Content-type", "text/html")
-            self.send_header("Content-length", len(html))
+            self.send_header("Content-length", len(data))
             self.end_headers()
-            self.wfile.write(utf8(html))
+            self.wfile.write(data)
         else:
             self.std_response()
             msg = "Unknown command request '{0}'\n"
@@ -85,17 +114,23 @@ class SyncHandler(BaseHTTPRequestHandler):
             self.wfile.write(utf8(self.usage))
 
     def std_response(self):
+        """Respond with simple text."""
+
         self.send_response(200)
         self.send_header("Content-type", "text")
         self.end_headers()
         self.wfile.write(utf8("{0}\n".format(self.name)))
 
     def err_response(self):
+        """Respond with an error code and text."""
+
         self.send_response(500)
         self.send_header("Content-type", "text")
         self.end_headers()
 
     def do_POST(self):
+        """Handle a POST request."""
+
         if self.path == "/sync":
             try:
                 length = self.headers.getheader("content-length")
@@ -128,32 +163,33 @@ class SyncHandler(BaseHTTPRequestHandler):
                 msg = "Unable to create/open temporary file on server:\n\t{0} - {1}"
                 self.wfile.write(utf8(msg.format(type(ex).__name__, ex)))
 
-    def process(self, filename, csv_folder):
+    @staticmethod
+    def process(filename, csv_folder):
+        """Unzip and create a FGDB from filename (a survey archive)."""
+
         # unzip file
         with zipfile.ZipFile(filename) as my_zip:
             for name in my_zip.namelist():
                 my_zip.extract(name, csv_folder)
         # get the protocol file
         protocol_path = os.path.join(csv_folder, "protocol.obsprot")
-        fgdb_folder = self.root_folder
-        (
-            database,
-            protocol_json,
-        ) = csv_loader.database_creator.database_for_protocol_file(
-            protocol_path, fgdb_folder
-        )
+        db_builder = csv_loader.database_creator.database_for_protocol_file
+        fgdb_folder = Config.root_folder
+        database, protocol_json = db_builder(protocol_path, fgdb_folder)
         # load the csv files
         csv_loader.process_csv_folder(csv_folder, protocol_json, database)
 
 
 if not os.path.exists(SyncHandler.upload_folder):
     os.makedirs(SyncHandler.upload_folder)
-# Next line is for an insecure (http) service
-# server = HTTPServer(('', 8080), SyncHandler)
-# Next two lines are for a secure (https) service
-server = HTTPServer(("", 8443), SyncHandler)
-server.socket = ssl.wrap_socket(
-    server.socket, keyfile="key.pem", certfile="cert.pem", server_side=True
-)
-# For more info on https see: https://gist.github.com/dergachev/7028596
+
+if Config.secure:
+    # For more info on https see: https://gist.github.com/dergachev/7028596
+    server = HTTPServer(("", 8443), SyncHandler)
+    server.socket = ssl.wrap_socket(
+        server.socket, keyfile="key.pem", certfile="cert.pem", server_side=True
+    )
+else:
+    server = HTTPServer(("", 8080), SyncHandler)
+
 server.serve_forever()
