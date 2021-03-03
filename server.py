@@ -119,7 +119,7 @@ class SyncHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text")
         self.end_headers()
-        self.wfile.write(utf8("{0}\n".format(self.name)))
+        self.wfile.write(utf8("{0}\n".format(Config.name)))
 
     def err_response(self):
         """Respond with an error code and text."""
