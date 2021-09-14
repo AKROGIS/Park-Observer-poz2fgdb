@@ -140,6 +140,10 @@ def process_tracklog_file_v1(point_file, track_file, protocol, database_path):
             protocol_items = items[:mission_fields_count]
             other_items = items[mission_fields_count:]
             start_time, end_time = other_items[s_key[T]], other_items[e_key[T]]
+            if start_time == end_time:
+                # Ignore "impossible" tracklogs with no duration and no length
+                # See [Issue #2](https://github.com/AKROGIS/Park-Observer-poz2fgdb/issues/2)
+                continue
             track, last_point = build_track_geometry(
                 point_file, last_point, start_time, end_time, gps_keys
             )
